@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ebikas Place — Fashion Redefined</title>
+  <meta name="description" content="Ebikas Place - Premium fashion: clothes, shoes, accessories and more." />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Clerk -->
+  <script src="https://js.clerk.com/clerk.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Animated Background Orbs -->
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+    <div class="orb orb-5"></div>
+  </div>
+
+  <!-- Noise Overlay -->
+  <div class="noise-overlay"></div>
+
+  <!-- Navigation -->
+  <nav id="navbar" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl transition-all duration-500">
+    <div class="glass-nav flex items-center justify-between px-5 py-3 rounded-[28px]">
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-2 group">
+        <div class="logo-mark">
+          <span>E</span>
+        </div>
+        <span class="font-display font-bold text-lg tracking-tight text-white">Ebikas<span class="text-pink-300">Place</span></span>
+      </a>
+
+      <!-- Desktop Links -->
+      <div class="hidden md:flex items-center gap-1">
+        <a href="#home" class="nav-link active">Home</a>
+        <a href="#shop" class="nav-link">Shop</a>
+        <a href="#categories" class="nav-link">Categories</a>
+        <a href="#featured" class="nav-link">Featured</a>
+        <a href="#about" class="nav-link">About</a>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-2">
+        <!-- Search -->
+        <button id="search-toggle" class="icon-btn" aria-label="Search">
+          <i data-lucide="search" class="w-5 h-5"></i>
+        </button>
+
+        <!-- Cart -->
+        <button id="cart-toggle" class="icon-btn relative" aria-label="Cart">
+          <i data-lucide="shopping-bag" class="w-5 h-5"></i>
+          <span id="cart-count" class="cart-badge">0</span>
+        </button>
+
+        <!-- Auth -->
+        <div id="auth-container" class="flex items-center">
+          <div id="clerk-sign-in" class="clerk-btn-wrapper">
+            <button class="sign-in-btn">
+              <i data-lucide="user-round" class="w-4 h-4"></i>
+              <span>Sign In</span>
+            </button>
+          </div>
+          <div id="clerk-user" class="hidden"></div>
+        </div>
+
+        <!-- Mobile menu -->
+        <button id="mobile-menu-toggle" class="icon-btn md:hidden" aria-label="Menu">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Search bar -->
+    <div id="search-bar" class="hidden mt-2 glass-nav rounded-3xl p-4">
+      <div class="relative">
+        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60"></i>
+        <input id="search-input" type="text" placeholder="Search for clothes, shoes, accessories..." class="w-full bg-white/10 border border-white/20 rounded-2xl pl-12 pr-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-pink-300/50 focus:bg-white/15 transition-all" />
+      </div>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu -->
+  <div id="mobile-menu" class="fixed inset-0 z-40 hidden">
+    <div class="mobile-menu-backdrop absolute inset-0" onclick="closeMobileMenu()"></div>
+    <div class="mobile-menu-panel">
+      <div class="flex justify-between items-center mb-8">
+        <span class="font-display font-bold text-xl text-white">Menu</span>
+        <button onclick="closeMobileMenu()" class="icon-btn"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <a href="#home" onclick="closeMobileMenu()" class="mobile-link">Home</a>
+      <a href="#shop" onclick="closeMobileMenu()" class="mobile-link">Shop</a>
+      <a href="#categories" onclick="closeMobileMenu()" class="mobile-link">Categories</a>
+      <a href="#featured" onclick="closeMobileMenu()" class="mobile-link">Featured</a>
+      <a href="#about" onclick="closeMobileMenu()" class="mobile-link">About</a>
+    </div>
+  </div>
+
+  <!-- Hero Section -->
+  <section id="home" class="min-h-screen flex items-center justify-center relative overflow-hidden pt-28 pb-16">
+    <div class="hero-scene" id="hero-scene">
+      <!-- Floating 3D Cards -->
+      <div class="floating-card fc-1" data-depth="40">
+        <img src="https://fakestoreapi.com/img/81fPKd-2AYL._AC_SL1500_.jpg" alt="Backpack" />
+        <div class="fc-label">Backpack</div>
+      </div>
+      <div class="floating-card fc-2" data-depth="70">
+        <img src="https://fakestoreapi.com/img/61pHAEJ4NML._AC_UX679_.jpg" alt="Jacket" />
+        <div class="fc-label">Jacket</div>
+      </div>
+      <div class="floating-card fc-3" data-depth="50">
+        <img src="https://fakestoreapi.com/img/71YA93T4upL._AC_UL640_QL65_ML3_.jpg" alt="Ring" />
+        <div class="fc-label">Jewelry</div>
+      </div>
+      <div class="floating-card fc-4" data-depth="90">
+        <img src="https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_.jpg" alt="T-Shirt" />
+        <div class="fc-label">T-Shirt</div>
+      </div>
+      <div class="floating-card fc-5" data-depth="60">
+        <img src="https://fakestoreapi.com/img/51Y5NI-I5jL._AC_UX679_.jpg" alt="Coat" />
+        <div class="fc-label">Coat</div>
+      </div>
+      <div class="floating-card fc-6" data-depth="80">
+        <img src="https://fakestoreapi.com/img/61sbMiVuGLL._AC_UL640_QL65_ML3_.jpg" alt="Bracelet" />
+        <div class="fc-label">Bracelet</div>
+      </div>
+    </div>
+
+    <!-- Hero Content -->
+    <div class="relative z-10 text-center px-6 max-w-5xl mx-auto">
+      <div class="reveal inline-flex items-center gap-2 glass-pill mb-6">
+        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+        <span class="text-sm text-white/80">New Collection — Fall 2025</span>
+      </div>
+      <h1 class="reveal font-display font-extrabold text-5xl sm:text-7xl lg:text-8xl leading-[0.95] tracking-tight mb-6">
+        <span class="block text-white">Fashion</span>
+        <span class="block gradient-text">Redefined</span>
+      </h1>
+      <p class="reveal text-lg sm:text-xl text-white/70 max-w-2xl mx-auto mb-10 font-light">
+        Discover curated styles that speak to you. Clothes, shoes, accessories — crafted for the bold and the beautiful.
+      </p>
+      <div class="reveal flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="#shop" class="btn-primary">
+          <span>Shop Collection</span>
+          <i data-lucide="arrow-right" class="w-5 h-5"></i>
+        </a>
+        <a href="#categories" class="btn-ghost">
+          <i data-lucide="grid-2x2" class="w-5 h-5"></i>
+          <span>Explore</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/50">
+      <span class="text-xs uppercase tracking-widest">Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- Stats Bar -->
+  <section class="py-12 px-6 relative z-10">
+    <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="reveal glass-card text-center p-6">
+        <div class="text-3xl font-display font-bold gradient-text">10K+</div>
+        <div class="text-sm text-white/60 mt-1">Happy Customers</div>
+      </div>
+      <div class="reveal glass-card text-center p-6">
+        <div class="text-3xl font-display font-bold gradient-text">500+</div>
+        <div class="text-sm text-white/60 mt-1">Premium Products</div>
+      </div>
+      <div class="reveal glass-card text-center p-6">
+        <div class="text-3xl font-display font-bold gradient-text">4.9★</div>
+        <div class="text-sm text-white/60 mt-1">Average Rating</div>
+      </div>
+      <div class="reveal glass-card text-center p-6">
+        <div class="text-3xl font-display font-bold gradient-text">24/7</div>
+        <div class="text-sm text-white/60 mt-1">Customer Support</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section id="categories" class="py-20 px-6 relative z-10">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <span class="reveal text-sm uppercase tracking-widest text-pink-300 font-semibold">Browse by</span>
+        <h2 class="reveal font-display font-bold text-4xl sm:text-5xl text-white mt-2">Shop Categories</h2>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="reveal category-card" data-category="clothing">
+          <div class="category-icon"><i data-lucide="shirt"></i></div>
+          <h3>Clothing</h3>
+          <p>Dresses, tops, pants & more</p>
+          <span class="category-count">120+ items</span>
+        </div>
+        <div class="reveal category-card" data-category="shoes">
+          <div class="category-icon"><i data-lucide="footprints"></i></div>
+          <h3>Shoes</h3>
+          <p>Sneakers, boots, heels</p>
+          <span class="category-count">80+ items</span>
+        </div>
+        <div class="reveal category-card" data-category="accessories">
+          <div class="category-icon"><i data-lucide="watch"></i></div>
+          <h3>Accessories</h3>
+          <p>Bags, watches, jewelry</p>
+          <span class="category-count">60+ items</span>
+        </div>
+        <div class="reveal category-card" data-category="all">
+          <div class="category-icon"><i data-lucide="sparkles"></i></div>
+          <h3>New Arrivals</h3>
+          <p>Fresh off the rack</p>
+          <span class="category-count">30+ items</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Products Section -->
+  <section id="shop" class="py-20 px-6 relative z-10">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
+        <div>
+          <span class="reveal text-sm uppercase tracking-widest text-pink-300 font-semibold">Our Collection</span>
+          <h2 class="reveal font-display font-bold text-4xl sm:text-5xl text-white mt-2">Featured Products</h2>
+        </div>
+        <!-- Filter Pills -->
+        <div class="flex flex-wrap gap-2">
+          <button class="filter-pill active" data-filter="all">All</button>
+          <button class="filter-pill" data-filter="men's clothing">Men</button>
+          <button class="filter-pill" data-filter="women's clothing">Women</button>
+          <button class="filter-pill" data-filter="jewelery">Accessories</button>
+        </div>
+      </div>
+
+      <!-- Loading Skeleton -->
+      <div id="loading-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+
+      <!-- Products Grid -->
+      <div id="products-grid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+    </div>
+  </section>
+
+  <!-- Featured / CTA Section -->
+  <section id="featured" class="py-20 px-6 relative z-10">
+    <div class="max-w-5xl mx-auto">
+      <div class="glass-card-large p-10 sm:p-16 text-center relative overflow-hidden">
+        <div class="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-pink-500/20 blur-3xl"></div>
+        <div class="absolute -bottom-20 -left-20 w-60 h-60 rounded-full bg-blue-500/20 blur-3xl"></div>
+        <div class="relative z-10">
+          <div class="inline-flex items-center gap-2 glass-pill mb-6">
+            <i data-lucide="gift" class="w-4 h-4 text-pink-300"></i>
+            <span class="text-sm text-white/80">Members get 20% off</span>
+          </div>
+          <h2 class="reveal font-display font-bold text-4xl sm:text-5xl text-white mb-4">Join the Ebikas Club</h2>
+          <p class="reveal text-lg text-white/70 max-w-xl mx-auto mb-8">Sign up to unlock exclusive deals, early access to drops, and member-only pricing on every collection.</p>
+          <button id="cta-signup" class="btn-primary mx-auto">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+            <span>Sign Up Free</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="py-20 px-6 relative z-10">
+    <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 items-center">
+      <div>
+        <span class="reveal text-sm uppercase tracking-widest text-pink-300 font-semibold">Our Story</span>
+        <h2 class="reveal font-display font-bold text-4xl sm:text-5xl text-white mt-2 mb-6">Where Style Meets Soul</h2>
+        <p class="reveal text-white/70 text-lg mb-4 font-light">
+          Ebikas Place was born from a passion for fashion that empowers. We curate pieces that don't just follow trends — they set them. Every item is selected with care, ensuring quality, comfort, and confidence in every wear.
+        </p>
+        <p class="reveal text-white/70 text-lg mb-8 font-light">
+          From everyday essentials to statement pieces, we bring you a world of style at your fingertips.
+        </p>
+        <div class="reveal flex flex-wrap gap-6">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl glass-card flex items-center justify-center">
+              <i data-lucide="truck" class="w-5 h-5 text-pink-300"></i>
+            </div>
+            <div>
+              <div class="text-white font-semibold text-sm">Free Shipping</div>
+              <div class="text-white/50 text-xs">On orders over $50</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl glass-card flex items-center justify-center">
+              <i data-lucide="refresh-cw" class="w-5 h-5 text-pink-300"></i>
+            </div>
+            <div>
+              <div class="text-white font-semibold text-sm">Easy Returns</div>
+              <div class="text-white/50 text-xs">30-day return policy</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl glass-card flex items-center justify-center">
+              <i data-lucide="shield-check" class="w-5 h-5 text-pink-300"></i>
+            </div>
+            <div>
+              <div class="text-white font-semibold text-sm">Secure Payment</div>
+              <div class="text-white/50 text-xs">100% protected</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="reveal relative">
+        <div class="about-image-grid">
+          <img src="https://fakestoreapi.com/img/71HblALAkfL._AC_UY879_-2_i60fb.jpg" alt="Fashion" class="about-img about-img-1" />
+          <img src="https://fakestoreapi.com/img/71-3HjGNDUL._AC_SY879._SX._UX._SY._UY_.jpg" alt="Fashion" class="about-img about-img-2" />
+          <img src="https://fakestoreapi.com/img/61pHAEJ4NML._AC_UX679_.jpg" alt="Fashion" class="about-img about-img-3" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter -->
+  <section class="py-20 px-6 relative z-10">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="reveal font-display font-bold text-3xl sm:text-4xl text-white mb-4">Stay in the Loop</h2>
+      <p class="reveal text-white/60 mb-8">Subscribe for the latest drops, exclusive offers, and style tips.</p>
+      <form id="newsletter-form" class="reveal flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+        <input type="email" required placeholder="Your email address" class="flex-1 bg-white/10 border border-white/20 rounded-2xl px-5 py-3 text-white placeholder-white/50 focus:outline-none focus:border-pink-300/50 focus:bg-white/15 transition-all" />
+        <button type="submit" class="btn-primary justify-center">
+          <span>Subscribe</span>
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 px-6 relative z-10 border-t border-white/10">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+        <div class="col-span-2 md:col-span-1">
+          <a href="#" class="flex items-center gap-2 mb-4">
+            <div class="logo-mark"><span>E</span></div>
+            <span class="font-display font-bold text-lg text-white">Ebikas<span class="text-pink-300">Place</span></span>
+          </a>
+          <p class="text-white/50 text-sm">Fashion redefined for the modern individual. Style with confidence.</p>
+        </div>
+        <div>
+          <h4 class="text-white font-semibold mb-3 text-sm">Shop</h4>
+          <ul class="space-y-2 text-sm text-white/50">
+            <li><a href="#shop" class="hover:text-pink-300 transition">All Products</a></li>
+            <li><a href="#categories" class="hover:text-pink-300 transition">Clothing</a></li>
+            <li><a href="#categories" class="hover:text-pink-300 transition">Shoes</a></li>
+            <li><a href="#categories" class="hover:text-pink-300 transition">Accessories</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-semibold mb-3 text-sm">Company</h4>
+          <ul class="space-y-2 text-sm text-white/50">
+            <li><a href="#about" class="hover:text-pink-300 transition">About Us</a></li>
+            <li><a href="#" class="hover:text-pink-300 transition">Careers</a></li>
+            <li><a href="#" class="hover:text-pink-300 transition">Sustainability</a></li>
+            <li><a href="#" class="hover:text-pink-300 transition">Press</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-white font-semibold mb-3 text-sm">Support</h4>
+          <ul class="space-y-2 text-sm text-white/50">
+            <li><a href="#" class="hover:text-pink-300 transition">Contact</a></li>
+            <li><a href="#" class="hover:text-pink-300 transition">Shipping</a></li>
+            <li><a href="#" class="hover:text-pink-300 transition">Returns</a></li>
+            <li><a href="#" class="hover:text-pink-300 transition">FAQ</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <p class="text-white/40 text-sm">© 2025 Ebikas Place. All rights reserved.</p>
+        <div class="flex gap-3">
+          <a href="#" class="social-link"><i data-lucide="instagram" class="w-4 h-4"></i></a>
+          <a href="#" class="social-link"><i data-lucide="twitter" class="w-4 h-4"></i></a>
+          <a href="#" class="social-link"><i data-lucide="facebook" class="w-4 h-4"></i></a>
+          <a href="#" class="social-link"><i data-lucide="youtube" class="w-4 h-4"></i></a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Cart Drawer -->
+  <div id="cart-drawer" class="fixed inset-0 z-[60] hidden">
+    <div class="cart-backdrop absolute inset-0" onclick="toggleCart()"></div>
+    <div class="cart-panel">
+      <div class="flex items-center justify-between p-6 border-b border-white/10">
+        <div class="flex items-center gap-2">
+          <i data-lucide="shopping-bag" class="w-5 h-5 text-pink-300"></i>
+          <h3 class="font-display font-bold text-xl text-white">Your Cart</h3>
+          <span id="cart-item-count" class="text-white/40 text-sm">(0)</span>
+        </div>
+        <button onclick="toggleCart()" class="icon-btn"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+      <div id="cart-empty" class="flex-1 flex flex-col items-center justify-center p-8 text-center">
+        <div class="w-20 h-20 rounded-3xl glass-card flex items-center justify-center mb-4">
+          <i data-lucide="shopping-bag" class="w-8 h-8 text-white/40"></i>
+        </div>
+        <p class="text-white/60 text-lg mb-2">Your cart is empty</p>
+        <p class="text-white/40 text-sm mb-6">Discover our latest collection and find your style.</p>
+        <button onclick="toggleCart()" class="btn-ghost">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i>
+          <span>Continue Shopping</span>
+        </button>
+      </div>
+      <div id="cart-footer" class="p-6 border-t border-white/10 hidden">
+        <div class="flex justify-between mb-2 text-sm text-white/60">
+          <span>Subtotal</span>
+          <span id="cart-subtotal">$0.00</span>
+        </div>
+        <div class="flex justify-between mb-4 text-sm text-white/60">
+          <span>Shipping</span>
+          <span class="text-green-400">Free</span>
+        </div>
+        <div class="flex justify-between mb-6">
+          <span class="text-white font-bold text-lg">Total</span>
+          <span id="cart-total" class="text-white font-bold text-lg">$0.00</span>
+        </div>
+        <button id="checkout-btn" class="btn-primary w-full justify-center">
+          <i data-lucide="lock" class="w-4 h-4"></i>
+          <span>Checkout</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-[100] space-y-3"></div>
+
+  <script src="script.js"></script>
+<script src="https://deepsite.hf.co/deepsite-badge.js"></script>
+</body>
+</html>

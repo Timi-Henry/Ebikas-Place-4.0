@@ -1,0 +1,1 @@
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'C:\Users\Kurotimi\Ebikas Place 4.0\ebikasplace4.0\.next\cache\webpack\client-development\5.pack.gz_' -> 'C:\Users\Kurotimi\Ebikas Place 4.0\ebikasplace4.0\.next\cache\webpack\client-development\5.pack.gz'
