@@ -1,23 +1,29 @@
 import "server-only";
 import { MongoClient, ServerApiVersion } from "mongodb";
-
-const uri = process.env.MONGODB_URI;
-const dbName = process.env.MONGODB_DB || "ebikas_place";
+import { getMongoEnvironment } from "@/lib/server/env";
 
 let clientPromise: Promise<MongoClient> | undefined;
 
-export async function getDb() {
-  if (!uri) {
-    throw new Error("MONGODB_URI is not configured");
-  }
-
+export async function getMongoClient() {
   if (!clientPromise) {
+    const { uri } = getMongoEnvironment();
     const client = new MongoClient(uri, {
-      serverApi: ServerApiVersion.v1
+      serverApi: ServerApiVersion.v1,
+      connectTimeoutMS: 10_000,
+      serverSelectionTimeoutMS: 10_000
     });
-    clientPromise = client.connect();
+    clientPromise = client.connect().catch((error) => {
+      clientPromise = undefined;
+      void client.close().catch(() => undefined);
+      throw error;
+    });
   }
 
-  const client = await clientPromise;
+  return clientPromise;
+}
+
+export async function getDb() {
+  const client = await getMongoClient();
+  const { dbName } = getMongoEnvironment();
   return client.db(dbName);
 }

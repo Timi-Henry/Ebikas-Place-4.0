@@ -12,6 +12,8 @@ type CatalogDocument = CatalogTaxonomyOption & {
 
 function withoutMongoFields(document: CatalogDocument): CatalogTaxonomyOption {
   const { _id: _ignoredId, createdAt: _ignoredDate, ...option } = document;
+  void _ignoredId;
+  void _ignoredDate;
   return option;
 }
 

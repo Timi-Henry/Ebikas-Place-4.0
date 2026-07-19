@@ -1,19 +1,23 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { SignInButton } from "@clerk/nextjs";
+import type { Metadata } from "next";
 import { AddressBook } from "@/components/address-book";
-import { CartProvider } from "@/components/cart-provider";
 import { Footer } from "@/components/footer";
 import { Nav } from "@/components/nav";
 import { StoreEffects } from "@/components/store-effects";
 import { getUserAddresses } from "@/lib/server/addresses";
+
+export const metadata: Metadata = {
+  title: "Saved addresses",
+  robots: { index: false, follow: false }
+};
 
 export default async function AddressesPage() {
   const user = await currentUser();
   const addresses = user ? await getUserAddresses(user.id) : [];
 
   return (
-    <CartProvider>
-      <main className="shell storefront-shell" id="main-content">
+    <main className="shell storefront-shell" id="main-content" tabIndex={-1}>
         <div className="bg-aurora" aria-hidden="true">
           <span className="aurora aurora-1" />
           <span className="aurora aurora-2" />
@@ -48,7 +52,6 @@ export default async function AddressesPage() {
           )}
         </section>
         <Footer />
-      </main>
-    </CartProvider>
+    </main>
   );
 }

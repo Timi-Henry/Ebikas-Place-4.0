@@ -1,5 +1,8 @@
 import "server-only";
 import { ObjectId } from "mongodb";
+import { normalizePageSize, type CursorPage } from "@/lib/cursor-pagination";
+import { ensureAddressIndexes } from "@/lib/server/database-indexes";
+import { createdBefore, decodeMongoCursor, toCursorPage } from "@/lib/server/mongo-pagination";
 import { getDb } from "@/lib/server/mongodb";
 import type { DeliveryDetails, SavedAddress } from "@/lib/types";
 
@@ -30,12 +33,31 @@ function toAddress(doc: AddressDocument): SavedAddress {
 }
 
 export async function getUserAddresses(userId: string) {
+  await ensureAddressIndexes();
   const db = await getDb();
   const docs = await db.collection<AddressDocument>("addresses").find({ userId }).sort({ updatedAt: -1, createdAt: -1 }).toArray();
   return docs.map(toAddress);
 }
 
+export async function getUserAddressesPage(
+  userId: string,
+  options: { cursor?: string; limit?: number } = {}
+): Promise<CursorPage<SavedAddress>> {
+  const limit = normalizePageSize(options.limit, 20, 50);
+  const cursor = decodeMongoCursor(options.cursor);
+  await ensureAddressIndexes();
+  const db = await getDb();
+  const docs = await db
+    .collection<AddressDocument>("addresses")
+    .find({ userId, ...createdBefore(cursor) })
+    .sort({ createdAt: -1, _id: -1 })
+    .limit(limit + 1)
+    .toArray();
+  return toCursorPage(docs, limit, toAddress);
+}
+
 export async function createUserAddress(userId: string, details: DeliveryDetails, label?: string) {
+  await ensureAddressIndexes();
   const db = await getDb();
   const createdAt = new Date();
   const result = await db.collection<Omit<AddressDocument, "_id">>("addresses").insertOne({
@@ -61,6 +83,7 @@ export async function updateUserAddress(userId: string, addressId: string, detai
     throw new Error("Address not found.");
   }
 
+  await ensureAddressIndexes();
   const db = await getDb();
   const updatedAt = new Date();
   const result = await db.collection<AddressDocument>("addresses").findOneAndUpdate(
@@ -81,6 +104,7 @@ export async function deleteUserAddress(userId: string, addressId: string) {
     throw new Error("Address not found.");
   }
 
+  await ensureAddressIndexes();
   const db = await getDb();
   const result = await db.collection("addresses").deleteOne({ _id: new ObjectId(addressId), userId });
   if (result.deletedCount === 0) {

@@ -58,6 +58,7 @@ export type CatalogTaxonomy = {
 
 export type Product = {
   id: string;
+  version?: number;
   name: string;
   description: string;
   category: string;
@@ -77,6 +78,7 @@ export type Product = {
   ratingAverage?: number;
   reviewCount?: number;
   createdAt?: string;
+  updatedAt?: string;
 };
 
 export type CloudinaryCleanupIssue = {
@@ -106,6 +108,7 @@ export type OrderItem = {
   productId: string;
   name: string;
   price: number;
+  lineTotal: number;
   quantity: number;
   imageUrl: string;
   selectedSize?: ProductSize;
@@ -139,6 +142,7 @@ export type SavedAddress = DeliveryDetails & {
 
 export type Order = {
   id: string;
+  version: number;
   userId: string;
   customerEmail?: string;
   customerName?: string;
@@ -148,6 +152,7 @@ export type Order = {
   pickupAddress?: string;
   items: OrderItem[];
   subtotal: number;
+  currency: "NGN";
   status: OrderStatus;
   rejectionReason?: string;
   createdAt: string;

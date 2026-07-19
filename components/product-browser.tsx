@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowUpRight, ChevronLeft, ChevronRight, Heart, Plus, Search, SlidersHorizontal, Star, X } from "lucide-react";
+import { ArrowUpRight, ChevronLeft, ChevronRight, Heart, Pause, Play, Plus, Search, SlidersHorizontal, Star, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/components/cart-provider";
 import { useOverlayDialog } from "@/components/use-overlay-dialog";
@@ -46,6 +47,7 @@ export function ProductBrowser({
   initialStockFilter = "all",
   initialPriceFilter = "all",
   initialSizeFilter = "all",
+  initialSort = "popular",
   fullCatalog = false,
   showControls = true,
   productLimit,
@@ -69,6 +71,7 @@ export function ProductBrowser({
   initialStockFilter?: StockFilter;
   initialPriceFilter?: PriceFilter;
   initialSizeFilter?: SizeFilter;
+  initialSort?: SortKey;
   fullCatalog?: boolean;
   showControls?: boolean;
   productLimit?: number;
@@ -81,12 +84,14 @@ export function ProductBrowser({
   compact?: boolean;
   emptyMessage?: string;
 }) {
+  const router = useRouter();
   const railRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [carouselStep, setCarouselStep] = useState(0);
   const [cardsPerView, setCardsPerView] = useState(1);
-  const [carouselPaused, setCarouselPaused] = useState(false);
+  const [carouselInteracting, setCarouselInteracting] = useState(false);
+  const [carouselManuallyPaused, setCarouselManuallyPaused] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const filterDialogRef = useOverlayDialog<HTMLElement>(filtersOpen, () => setFiltersOpen(false));
@@ -101,27 +106,57 @@ export function ProductBrowser({
   const [subcategoryFilter, setSubcategoryFilter] = useState(initialSubcategory !== "all" ? normalizeTaxonomyValue(initialSubcategory) : "all");
   const [audienceFilter, setAudienceFilter] = useState(initialAudience);
   const availableDepartments = useMemo(() => {
-    const ids = [...new Set([...defaultCatalogTaxonomy.departments.map((item) => item.id), ...productTaxonomies.map((item) => item.departmentId)])];
+    const ids = [...new Set(productTaxonomies.map((item) => item.departmentId).filter(Boolean))];
     return [{ label: "All departments", value: "all" }, ...ids.map((id) => ({
       label: getCatalogDepartment(defaultCatalogTaxonomy, id)?.label || formatTaxonomyLabel(id),
       value: id
     }))];
   }, [productTaxonomies]);
-  const availableCategories = useMemo(() => {
-    const ids = [...new Set([...defaultCatalogTaxonomy.families.map((item) => item.id), ...productTaxonomies.map((item) => item.familyId)])]
-      .filter((id) => departmentFilter === "all" || productTaxonomies.some((item) => item.departmentId === departmentFilter && item.familyId === id));
-    return [{ label: "All categories", value: "all" }, ...ids.map((id) => ({
+  const categorySuggestions = useMemo(() => {
+    const ids = [...new Set(productTaxonomies.map((item) => item.familyId).filter(Boolean))];
+    return ids.map((id) => ({
       label: getCatalogFamily(defaultCatalogTaxonomy, id)?.label || formatTaxonomyLabel(id),
       value: id
-    }))];
-  }, [departmentFilter, productTaxonomies]);
+    }));
+  }, [productTaxonomies]);
+  const availableCategories = useMemo(() => [
+    { label: "All categories", value: "all" },
+    ...categorySuggestions.filter(({ value }) => departmentFilter === "all" || productTaxonomies.some((item) => item.departmentId === departmentFilter && item.familyId === value))
+  ], [categorySuggestions, departmentFilter, productTaxonomies]);
   const [search, setSearch] = useState(initialSearch);
   const deferredSearch = useDeferredValue(search);
-  const [sort, setSort] = useState<SortKey>("popular");
+  const [sort, setSort] = useState<SortKey>(initialSort);
   const [stockFilter, setStockFilter] = useState<StockFilter>(initialStockFilter);
   const [priceFilter, setPriceFilter] = useState<PriceFilter>(initialPriceFilter);
   const [sizeFilter, setSizeFilter] = useState<SizeFilter>(initialSizeFilter);
   const { addItem, isWishlisted, toggleWishlist } = useCart();
+
+  useEffect(() => {
+    if (!fullCatalog) return;
+    const timeoutId = window.setTimeout(() => {
+      const params = new URLSearchParams(window.location.search);
+      const setParam = (name: string, value: string, fallback = "all") => {
+        if (!value || value === fallback) params.delete(name);
+        else params.set(name, value);
+      };
+      setParam("department", departmentFilter);
+      setParam("family", filter);
+      setParam("type", subcategoryFilter);
+      setParam("audience", audienceFilter);
+      setParam("filter", stockFilter);
+      setParam("price", priceFilter);
+      setParam("size", sizeFilter);
+      setParam("sort", sort, "popular");
+      const normalizedSearch = search.trim();
+      if (normalizedSearch) params.set("search", normalizedSearch);
+      else params.delete("search");
+      params.delete("category");
+      params.delete("subcategory");
+      const query = params.toString();
+      window.history.replaceState(window.history.state, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+    }, 200);
+    return () => window.clearTimeout(timeoutId);
+  }, [audienceFilter, departmentFilter, filter, fullCatalog, priceFilter, search, sizeFilter, sort, stockFilter, subcategoryFilter]);
   const availableSubcategories = useMemo(() => {
     const ids = [...new Set(productTaxonomies.filter((item) => filter === "all" || item.familyId === filter).map((item) => item.productTypeId))];
     return [{ label: "All product types", value: "all" }, ...ids.map((id) => ({
@@ -202,6 +237,22 @@ export function ProductBrowser({
       .slice(0, 5);
   }, [products, search, showControls]);
 
+  function resetFilters() {
+    setDepartmentFilter("all");
+    setFilter("all");
+    setSubcategoryFilter("all");
+    setAudienceFilter("all");
+    setStockFilter("all");
+    setPriceFilter("all");
+    setSizeFilter("all");
+    setSearch("");
+  }
+
+  function browseSuggestedCategory(category: string) {
+    resetFilters();
+    setFilter(category);
+  }
+
   const activeFilters = useMemo(() => {
     const filters = [
       departmentFilter !== "all" ? { label: formatTaxonomyLabel(departmentFilter), action: () => setDepartmentFilter("all") } : null,
@@ -221,11 +272,7 @@ export function ProductBrowser({
 
   const maxCarouselIndex = Math.max(0, displayedProducts.length - cardsPerView);
   const canCarousel = autoScroll && displayedProducts.length > cardsPerView;
-
-  useEffect(() => {
-    if (!autoScroll) return;
-    setCarouselIndex(0);
-  }, [autoScroll, displayedProducts.length]);
+  const carouselPaused = carouselInteracting || carouselManuallyPaused;
 
   useEffect(() => {
     if (!autoScroll) return;
@@ -289,7 +336,7 @@ export function ProductBrowser({
     return badges;
   }
 
-  function renderProductCard(product: Product) {
+  function renderProductCard(product: Product, index: number) {
     const currentPrice = getCurrentPrice(product);
     const compareAt = getCompareAtPrice(product);
     const discount = getDiscountPercent(product);
@@ -321,6 +368,7 @@ export function ProductBrowser({
               src={product.imageUrl}
               alt={product.name}
               fill
+              priority={fullCatalog && index === 0}
               sizes={fullCatalog ? "(max-width: 760px) 50vw, (max-width: 1020px) 33vw, (max-width: 1240px) 25vw, 18vw" : "(max-width: 760px) 64vw, (max-width: 1020px) 25vw, (max-width: 1240px) 20vw, 17vw"}
             />
             <span className="product-view-link">View details <ArrowUpRight size={15} /></span>
@@ -373,7 +421,7 @@ export function ProductBrowser({
               type="button"
               onClick={() => {
                 if (product.sizes?.length) {
-                  window.location.href = `/products/${product.id}`;
+                  router.push(`/products/${product.id}`);
                   return;
                 }
                 addItem(product);
@@ -390,7 +438,10 @@ export function ProductBrowser({
   }
 
   return (
-    <section className={fullCatalog ? "section shop-catalog" : "section"} id={sectionId}>
+    <section
+      className={`${fullCatalog ? "section shop-catalog" : "section"}${filtersOpen ? " shop-catalog-filters-open" : ""}`}
+      id={sectionId}
+    >
       <div className="section-head">
         <div>
           <span className="eyebrow reveal">{eyebrow}</span>
@@ -455,7 +506,14 @@ export function ProductBrowser({
               ) : null}
             </div>
             {fullCatalog ? (
-              <button className="catalog-filter-trigger" type="button" onClick={() => setFiltersOpen(true)}>
+              <button
+                aria-controls="catalog-filter-dialog"
+                aria-expanded={filtersOpen}
+                aria-haspopup="dialog"
+                className="catalog-filter-trigger"
+                type="button"
+                onClick={() => setFiltersOpen(true)}
+              >
                 <SlidersHorizontal size={17} />
                 Filters
                 {activeFilters.length > 0 ? <span>{activeFilters.length}</span> : null}
@@ -549,6 +607,7 @@ export function ProductBrowser({
             <button className="catalog-sidebar-backdrop" type="button" aria-label="Close filters" onClick={() => setFiltersOpen(false)} />
           ) : null}
           <aside
+            id="catalog-filter-dialog"
             ref={filterDialogRef}
             className={"catalog-sidebar " + (filtersOpen ? "catalog-sidebar-open" : "")}
             role={filtersOpen ? "dialog" : undefined}
@@ -710,36 +769,47 @@ export function ProductBrowser({
                 <button
                   className="reset-filters-button"
                   type="button"
-                  onClick={() => {
-                    setDepartmentFilter("all");
-                    setFilter("all");
-                    setSubcategoryFilter("all");
-                    setAudienceFilter("all");
-                    setStockFilter("all");
-                    setPriceFilter("all");
-                    setSizeFilter("all");
-                    setSearch("");
-                  }}
+                  onClick={resetFilters}
                 >
                   Reset all
                 </button>
               </div>
             ) : null}
-            <div className={`product-grid ${compact ? "product-grid-compact" : ""}`}>
-              {displayedProducts.map(renderProductCard)}
-            </div>
+            {displayedProducts.length > 0 ? (
+              <div className={`product-grid ${compact ? "product-grid-compact" : ""}`}>
+                {displayedProducts.map(renderProductCard)}
+              </div>
+            ) : (
+              <div className="catalog-empty" role="region" aria-labelledby={`${sectionId}-empty-title`}>
+                <span className="catalog-empty-icon" aria-hidden="true"><Search size={24} /></span>
+                <h3 id={`${sectionId}-empty-title`}>No products found</h3>
+                <p>{emptyMessage || "Try a shorter search, choose fewer filters, or start again with the full collection."}</p>
+                <button className="btn-primary" type="button" onClick={resetFilters}>Clear all filters</button>
+                {categorySuggestions.length > 0 ? (
+                  <div className="catalog-empty-suggestions">
+                    <span>Or browse a category</span>
+                    <div>
+                      {categorySuggestions.slice(0, 4).map((item) => (
+                        <button key={item.value} type="button" onClick={() => browseSuggestedCategory(item.value)}>{item.label}</button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
           </div>
         </div>
       ) : autoScroll ? (
         <div
           className="product-carousel"
-          onMouseEnter={() => setCarouselPaused(true)}
-          onMouseLeave={() => setCarouselPaused(false)}
-          onFocusCapture={() => setCarouselPaused(true)}
+          onFocusCapture={(event) => {
+            const target = event.target;
+            setCarouselInteracting(!(target instanceof Element && target.closest(".carousel-automation-controls")));
+          }}
           onBlurCapture={(event) => {
             const nextTarget = event.relatedTarget;
             if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
-              setCarouselPaused(false);
+              setCarouselInteracting(false);
             }
           }}
         >
@@ -754,13 +824,25 @@ export function ProductBrowser({
           <button className="carousel-arrow carousel-arrow-right" type="button" onClick={() => moveCarousel(1)} aria-label="Next featured products" disabled={!canCarousel}>
             <ChevronRight size={22} />
           </button>
+          {canCarousel ? (
+            <div className="carousel-automation-controls">
+              <button
+                aria-pressed={carouselManuallyPaused}
+                type="button"
+                onClick={() => setCarouselManuallyPaused((paused) => !paused)}
+              >
+                {carouselManuallyPaused ? <Play size={15} /> : <Pause size={15} />}
+                {carouselManuallyPaused ? "Play carousel" : "Pause carousel"}
+              </button>
+            </div>
+          ) : null}
         </div>
       ) : (
         <div className={`product-grid ${compact ? "product-grid-compact" : ""}`}>
           {displayedProducts.map(renderProductCard)}
         </div>
       )}
-      {visibleProducts.length === 0 ? (
+      {!fullCatalog && visibleProducts.length === 0 ? (
         <p className="notice">{emptyMessage || (showControls ? "No products match those filters." : "No featured products yet.")}</p>
       ) : null}
       {ctaHref || secondaryCtaHref ? (

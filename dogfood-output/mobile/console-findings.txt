@@ -1,0 +1,9 @@
+Routes checked: / and /shop
+
+Browser errors command: no JavaScript exceptions were returned during the covered checks.
+
+Repeated console warning on both routes:
+Clerk is loaded with development keys. Clerk states that development instances have strict usage limits and should not be used for production deployments.
+
+Recommended action:
+Configure the Vercel production environment with Clerk production-instance publishable and secret keys, then redeploy and verify the warning is gone.

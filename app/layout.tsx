@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { CartProvider } from "@/components/cart-provider";
+import { SkipLink } from "@/components/skip-link";
 import { ThemeScript } from "@/components/theme-script";
+import { getSiteUrl } from "@/lib/server/env";
 import "./globals.css";
 import "./storefront.css";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ebikas-place.example.com";
+const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -35,8 +38,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <ThemeScript />
         </head>
         <body>
-          <a className="skip-link" href="#main-content">Skip to main content</a>
-          {children}
+          <SkipLink />
+          <CartProvider>{children}</CartProvider>
         </body>
       </html>
     </ClerkProvider>

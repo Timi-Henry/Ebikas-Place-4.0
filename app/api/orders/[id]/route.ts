@@ -1,47 +1,89 @@
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/server/auth";
-import { cancelUserOrder, updateOrderStatusByAdmin, type AdminOrderAction } from "@/lib/server/orders";
+import {
+  cancelUserOrder,
+  OrderTransitionError,
+  updateOrderStatusByAdmin,
+  type AdminOrderAction
+} from "@/lib/server/orders";
+import {
+  assertSameOrigin,
+  createRequestContext,
+  parseBoundedJson,
+  withRequestId
+} from "@/lib/server/request-security";
+import { safeErrorResponse } from "@/lib/server/safe-errors";
+import { enforceMutationRateLimit } from "@/lib/server/rate-limit";
+import { getSiteUrl } from "@/lib/server/env";
+import { objectIdSchema, orderActionSchema } from "@/lib/validation";
 
 const adminActions = new Set(["accept", "confirm", "reject", "out-for-delivery", "delivered"]);
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const body = await request.json().catch(() => null);
-  const action = typeof body?.action === "string" ? body.action : "";
-  const { id } = await params;
-
-  if (action === "cancel") {
-    const user = await currentUser();
-    if (!user) {
-      return NextResponse.json({ error: "Sign in required." }, { status: 401 });
-    }
-
-    try {
-      const order = await cancelUserOrder(id, user.id);
-      return NextResponse.json({ order });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Order could not be cancelled.";
-      return NextResponse.json({ error: message }, { status: 400 });
-    }
-  }
-
-  if (!adminActions.has(action)) {
-    return NextResponse.json({ error: "Unsupported order action." }, { status: 400 });
-  }
-
-  const admin = await requireAdmin();
-  if (!admin.ok) {
-    return NextResponse.json({ error: admin.message }, { status: admin.status });
-  }
-
-  const adminAction: AdminOrderAction = action === "accept" ? "confirm" : (action as AdminOrderAction);
-  const rejectionReason = typeof body?.rejectionReason === "string" ? body.rejectionReason.slice(0, 500) : "";
+  const context = createRequestContext(request);
 
   try {
-    const order = await updateOrderStatusByAdmin(id, adminAction, rejectionReason);
-    return NextResponse.json({ order });
+    assertSameOrigin(request, { expectedOrigin: getSiteUrl() });
+
+    const { userId } = await auth();
+    if (!userId) {
+      return withRequestId(
+        NextResponse.json({ error: "Sign in required." }, { status: 401 }),
+        context.requestId
+      );
+    }
+
+    await enforceMutationRateLimit({
+      request,
+      scope: "order.transition",
+      limit: 60,
+      windowMs: 10 * 60 * 1000,
+      userId
+    });
+
+    const idResult = objectIdSchema.safeParse((await params).id);
+    if (!idResult.success) {
+      return withRequestId(NextResponse.json({ error: "Order not found." }, { status: 404 }), context.requestId);
+    }
+
+    const body = await parseBoundedJson(request, orderActionSchema, { maxBytes: 2048 });
+    const { action, expectedVersion } = body;
+    const id = idResult.data;
+
+    if (action === "cancel") {
+      const order = await cancelUserOrder(id, userId, expectedVersion);
+      return withRequestId(NextResponse.json({ order }), context.requestId);
+    }
+
+    if (!adminActions.has(action)) {
+      return withRequestId(
+        NextResponse.json({ error: "Unsupported order action." }, { status: 400 }),
+        context.requestId
+      );
+    }
+
+    const admin = await requireAdmin();
+    if (!admin.ok) {
+      return withRequestId(
+        NextResponse.json({ error: admin.message }, { status: admin.status }),
+        context.requestId
+      );
+    }
+
+    const adminAction: AdminOrderAction = action === "accept" ? "confirm" : (action as AdminOrderAction);
+    const rejectionReason = body.rejectionReason || "";
+
+    const order = await updateOrderStatusByAdmin(id, adminAction, expectedVersion, rejectionReason);
+    return withRequestId(NextResponse.json({ order }), context.requestId);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Order could not be updated.";
-    return NextResponse.json({ error: message }, { status: 400 });
+    if (error instanceof OrderTransitionError) {
+      return withRequestId(
+        NextResponse.json({ error: error.message, code: error.code }, { status: error.status }),
+        context.requestId
+      );
+    }
+
+    return safeErrorResponse(error, { ...context, event: "order.transition.failed" });
   }
 }

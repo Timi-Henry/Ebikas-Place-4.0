@@ -1,7 +1,6 @@
 import { AdminAccessDenied } from "@/components/admin-access-denied";
 import { AdminOrdersManager } from "@/components/admin-orders-manager";
 import { AdminSectionNav } from "@/components/admin-section-nav";
-import { CartProvider } from "@/components/cart-provider";
 import { Nav } from "@/components/nav";
 import { requireAdmin } from "@/lib/server/auth";
 import { getAllOrders } from "@/lib/server/orders";
@@ -11,8 +10,7 @@ export default async function AdminOrdersPage() {
   const orders = admin.ok ? await getAllOrders() : [];
 
   return (
-    <CartProvider>
-      <main className="shell storefront-shell admin-shell" id="main-content">
+    <main className="shell storefront-shell admin-shell" id="main-content" tabIndex={-1}>
         <Nav />
         <div className="admin-main admin-main-wide">
           <section className="admin-card">
@@ -29,7 +27,6 @@ export default async function AdminOrdersPage() {
             )}
           </section>
         </div>
-      </main>
-    </CartProvider>
+    </main>
   );
 }

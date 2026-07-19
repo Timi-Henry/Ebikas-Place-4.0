@@ -6,11 +6,18 @@ export function StoreEffects() {
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const revealElements = () => document.querySelectorAll<HTMLElement>(".reveal:not(.visible)");
+    const root = document.documentElement;
 
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion || !("IntersectionObserver" in window)) {
       revealElements().forEach((element) => element.classList.add("visible"));
       return;
     }
+
+    revealElements().forEach((element) => {
+      const bounds = element.getBoundingClientRect();
+      if (bounds.top <= window.innerHeight + 36 && bounds.bottom >= -36) element.classList.add("visible");
+    });
+    root.classList.add("store-effects-ready");
 
     const revealObserver = new IntersectionObserver(
       (entries) => {
@@ -32,6 +39,7 @@ export function StoreEffects() {
     return () => {
       revealObserver.disconnect();
       mutationObserver.disconnect();
+      root.classList.remove("store-effects-ready");
     };
   }, []);
 

@@ -1,17 +1,19 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, Headphones, ShieldCheck, Truck } from "lucide-react";
-import { CartProvider } from "@/components/cart-provider";
+import { CatalogUnavailableNotice } from "@/components/catalog-unavailable-notice";
 import { Footer } from "@/components/footer";
 import { Nav } from "@/components/nav";
 import { ProductImageGallery } from "@/components/product-image-gallery";
-import { ProductBrowser } from "@/components/product-browser";
+import { createProductCardModel } from "@/components/product-card";
 import { ProductPurchasePanel } from "@/components/product-purchase-panel";
+import { ProductRail } from "@/components/product-rail";
 import { RecentlyViewedProducts } from "@/components/recently-viewed-products";
 import { StoreEffects } from "@/components/store-effects";
 import { businessInfo } from "@/lib/business-info";
 import { formatTaxonomyLabel, hydrateProductTaxonomy } from "@/lib/product-taxonomy";
 import { getCurrentPrice } from "@/lib/pricing";
-import { getProductById, getProducts } from "@/lib/server/products";
+import { getProductByIdResult, getProductsResult } from "@/lib/server/products";
 
 function safeJsonLd(value: unknown) {
   return JSON.stringify(value).replace(/</g, "\\u003c");
@@ -19,17 +21,37 @@ function safeJsonLd(value: unknown) {
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await getProductById(id);
+  const catalog = await getProductByIdResult(id);
+  const product = catalog.ok ? catalog.value : null;
 
   return {
     title: product ? `${product.name} | Ebikas Place` : "Product | Ebikas Place",
-    description: product?.description || "Shop Ebikas Place products."
+    description: product?.description || "Shop Ebikas Place products.",
+    ...(!catalog.ok ? { robots: { index: false, follow: true } } : {})
   };
+}
+
+function ProductCatalogUnavailablePage() {
+  return (
+    <main className="shell storefront-shell" id="main-content" tabIndex={-1}>
+      <StoreEffects />
+      <Nav />
+      <CatalogUnavailableNotice framed />
+      <Footer />
+    </main>
+  );
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [product, products] = await Promise.all([getProductById(id), getProducts()]);
+  const [productResult, productsResult] = await Promise.all([getProductByIdResult(id), getProductsResult()]);
+
+  if (!productResult.ok) {
+    return <ProductCatalogUnavailablePage />;
+  }
+
+  const product = productResult.value;
+  const products = productsResult.ok ? productsResult.value : [];
 
   if (!product) {
     notFound();
@@ -76,8 +98,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   };
 
   return (
-    <CartProvider>
-      <main className="shell storefront-shell" id="main-content">
+    <main className="shell storefront-shell" id="main-content" tabIndex={-1}>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(productJsonLd) }} />
         <div className="bg-aurora" aria-hidden="true">
           <span className="aurora aurora-1" />
@@ -88,13 +109,20 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         <div className="noise-overlay" aria-hidden="true" />
         <StoreEffects />
         <Nav />
+        {!productsResult.ok ? (
+          <CatalogUnavailableNotice
+            framed
+            title="Recommendations are temporarily unavailable."
+            message="This product is available to view, but related products could not be loaded right now."
+          />
+        ) : null}
         <section className="product-detail-shell section-frame">
           <nav className="store-breadcrumbs" aria-label="Breadcrumb">
-            <a href="/">Home</a>
+            <Link href="/">Home</Link>
             <ChevronRight size={14} />
-            <a href="/shop">Shop</a>
+            <Link href="/shop">Shop</Link>
             <ChevronRight size={14} />
-            <a href={`/shop?category=${encodeURIComponent(product.category)}`}>{formatTaxonomyLabel(product.category)}</a>
+            <Link href={`/shop?category=${encodeURIComponent(product.category)}`}>{formatTaxonomyLabel(product.category)}</Link>
             <ChevronRight size={14} />
             <span>{product.name}</span>
           </nav>
@@ -108,12 +136,10 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             <span><Headphones size={19} /><b>Need help?</b><small>Call or WhatsApp {businessInfo.phone}</small></span>
           </div>
         </section>
-        <ProductBrowser
-          products={relatedProducts}
+        <ProductRail
+          products={relatedProducts.map((relatedProduct) => createProductCardModel(relatedProduct))}
           title="Related products"
           eyebrow={`${formatTaxonomyLabel(product.category)} / ${formatTaxonomyLabel(product.subcategory)}`}
-          showControls={false}
-          productLimit={6}
           compact
           emptyMessage="No related products yet."
           secondaryCtaHref={`/shop?family=${encodeURIComponent(productTaxonomy.familyId)}&type=${encodeURIComponent(productTaxonomy.productTypeId)}`}
@@ -121,9 +147,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           ctaHref="/shop"
           ctaLabel="All products"
         />
-        <RecentlyViewedProducts currentProduct={product} products={products} />
+        <RecentlyViewedProducts currentProductId={product.id} />
         <Footer />
-      </main>
-    </CartProvider>
+    </main>
   );
 }

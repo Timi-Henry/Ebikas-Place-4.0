@@ -2,7 +2,8 @@
 
 import { MapPin, Minus, Plus, ShoppingBag, Trash2, Truck, X } from "lucide-react";
 import { SignInButton, useUser } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart-provider";
 import { CopyTextButton } from "@/components/copy-text-button";
 import { SameAsPhoneControl } from "@/components/same-as-phone-control";
@@ -19,6 +20,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   const { showToast } = useToast();
   const { isLoaded, isSignedIn, user } = useUser();
   const [placingOrder, setPlacingOrder] = useState(false);
+  const checkoutAttemptRef = useRef<{ fingerprint: string; key: string } | null>(null);
   const [message, setMessage] = useState("");
   const [addresses, setAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState("");
@@ -85,7 +87,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
     }));
   }
 
-  function useSavedAddress(address: SavedAddress) {
+  function selectSavedAddress(address: SavedAddress) {
     setSelectedAddressId(address.id);
     setUseNewAddress(false);
     setWhatsappSameAsPhone(Boolean(address.phone && address.phone === address.whatsapp));
@@ -129,15 +131,34 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
     return deliveryValidationMessage(deliveryDetails);
   }
 
-  function orderItemsPayload() {
-    return items.map((item) => ({
-      productId: item.id,
-      name: item.name,
-      price: getCurrentPrice(item),
-      quantity: item.quantity,
-      imageUrl: item.imageUrl,
-      selectedSize: item.selectedSize
-    }));
+  function checkoutPayload() {
+    return {
+      items: items.map((item) => ({
+        productId: item.id,
+        quantity: item.quantity,
+        selectedSize: item.selectedSize
+      })),
+      fulfillment:
+        fulfillmentMethod === "customer-rider"
+          ? { method: "customer-rider" as const, contact: customerContactPayload() }
+          : {
+              method: "store-delivery" as const,
+              destination:
+                !useNewAddress && selectedAddressId
+                  ? { source: "saved" as const, addressId: selectedAddressId }
+                  : { source: "new" as const, details: deliveryDetails, saveAddress }
+            }
+    };
+  }
+
+  function checkoutKey(payload: ReturnType<typeof checkoutPayload>) {
+    const fingerprint = JSON.stringify(payload);
+    if (checkoutAttemptRef.current?.fingerprint === fingerprint) {
+      return checkoutAttemptRef.current.key;
+    }
+    const key = globalThis.crypto.randomUUID();
+    checkoutAttemptRef.current = { fingerprint, key };
+    return key;
   }
 
   async function placeOrder() {
@@ -146,46 +167,56 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
       setMessage(checkoutError);
       return;
     }
+    const payload = checkoutPayload();
     setPlacingOrder(true);
     setMessage("Placing order...");
-    const response = await fetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        items: orderItemsPayload(),
-        fulfillmentMethod,
-        customerContact: customerContactPayload(),
-        deliveryDetails: fulfillmentMethod === "store-delivery" ? deliveryDetails : undefined,
-        addressId: fulfillmentMethod === "store-delivery" && !useNewAddress ? selectedAddressId : undefined,
-        saveAddress: fulfillmentMethod === "store-delivery" ? saveAddress : false
-      })
-    });
-    const data = await response.json().catch(() => ({}));
-    setPlacingOrder(false);
-    if (!response.ok) {
-      setMessage(data.error || "Order could not be placed.");
+
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": checkoutKey(payload),
+          "X-Ebikas-Request": "checkout"
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setMessage(data.error || "Order could not be placed.");
+        showToast({
+          title: "Order not placed",
+          message: data.error || "Check your checkout details and try again.",
+          tone: "error"
+        });
+        return;
+      }
+
+      if (data.savedAddress) {
+        setAddresses((current) => {
+          if (current.some((address) => address.id === data.savedAddress.id)) return current;
+          return [data.savedAddress, ...current];
+        });
+        selectSavedAddress(data.savedAddress);
+      }
+      checkoutAttemptRef.current = null;
+      clear();
+      setMessage(`Order placed. Order #${String(data.order?.id || "").slice(-6).toUpperCase()}.`);
+      showToast({
+        title: "Order placed",
+        message: `Order #${String(data.order?.id || "").slice(-6).toUpperCase()} has been sent to Ebikas Place.`,
+        tone: "success"
+      });
+    } catch {
+      setMessage("The network interrupted checkout. Your cart is safe; try again.");
       showToast({
         title: "Order not placed",
-        message: data.error || "Check your checkout details and try again.",
+        message: "The network interrupted checkout. Try again when you are connected.",
         tone: "error"
       });
-      return;
+    } finally {
+      setPlacingOrder(false);
     }
-
-    if (data.savedAddress) {
-      setAddresses((current) => {
-        if (current.some((address) => address.id === data.savedAddress.id)) return current;
-        return [data.savedAddress, ...current];
-      });
-      useSavedAddress(data.savedAddress);
-    }
-    clear();
-    setMessage(`Order placed. Order #${String(data.order?.id || "").slice(-6).toUpperCase()}.`);
-    showToast({
-      title: "Order placed",
-      message: `Order #${String(data.order?.id || "").slice(-6).toUpperCase()} has been sent to Ebikas Place.`,
-      tone: "success"
-    });
   }
 
   if (!open) return null;
@@ -210,7 +241,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
           ) : (
             items.map((item) => (
               <article className="cart-item" key={`${item.id}-${item.selectedSize || "none"}`}>
-                <img src={item.imageUrl} alt="" width={86} height={104} />
+                <Image src={item.imageUrl} alt="" width={86} height={104} sizes="86px" />
                 <div>
                   <strong>{item.name}</strong>
                   {item.selectedSize ? <span className="cart-size">Size {item.selectedSize}</span> : null}
@@ -343,7 +374,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                             return;
                           }
                           const address = addresses.find((item) => item.id === event.target.value);
-                          if (address) useSavedAddress(address);
+                          if (address) selectSavedAddress(address);
                         }}
                       >
                         {addresses.map((address) => (

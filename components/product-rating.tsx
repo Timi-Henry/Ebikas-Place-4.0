@@ -1,6 +1,6 @@
 "use client";
 
-import { Star } from "lucide-react";
+import { ChevronDown, Star } from "lucide-react";
 import { useState } from "react";
 
 export function ProductRating({
@@ -56,20 +56,26 @@ export function ProductRating({
         <strong>{average ? average.toFixed(1) : "No ratings yet"}</strong>
         <span>{count} review{count === 1 ? "" : "s"}</span>
       </div>
-      <div className="rating-actions" role="group" aria-label="Rate this product">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            aria-label={`Rate ${star} star${star === 1 ? "" : "s"}`}
-            aria-pressed={selected === star}
-            className={selected >= star ? "active" : ""}
-            key={star}
-            type="button"
-            onClick={() => rate(star)}
-          >
-            <Star size={20} fill="currentColor" />
-          </button>
-        ))}
-      </div>
+      <details className="rating-entry">
+        <summary>
+          Rate this item
+          <ChevronDown size={15} />
+        </summary>
+        <div className="rating-actions" role="group" aria-label="Rate this product">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              aria-label={`Rate ${star} star${star === 1 ? "" : "s"}`}
+              aria-pressed={selected === star}
+              className={selected >= star ? "active" : ""}
+              key={star}
+              type="button"
+              onClick={() => rate(star)}
+            >
+              <Star size={20} fill="currentColor" />
+            </button>
+          ))}
+        </div>
+      </details>
       {message ? <p role="status" aria-live="polite">{message}</p> : null}
     </div>
   );

@@ -149,31 +149,33 @@ function withGallery({ gallery, ...product }: SampleProductInput): Product {
 
 export const sampleProducts: Product[] = [
   withGallery({
-    id: "sample-mens-oxford-shirt",
+    id: "64f000000000000000000001",
     name: "Crisp cotton oxford shirt",
     description: "A clean everyday button-down cut from breathable cotton with a structured collar and easy Lagos-weekend polish.",
     category: "mens-clothing",
     subcategory: "shirts",
     gallery: [...galleries.mensOxford],
     price: 18500,
+    salePrice: 15900,
     sizes: ["S", "M", "L", "XL", "XXL"],
     stock: 18,
     featured: true
   }),
   withGallery({
-    id: "sample-mens-tailored-chino",
+    id: "64f000000000000000000002",
     name: "Tapered stretch chino pants",
     description: "Soft stretch chinos with a tapered leg, deep pockets, and a sharp fit for work, dinner, or relaxed Fridays.",
     category: "mens-clothing",
     subcategory: "pants",
     gallery: [...galleries.mensChino],
     price: 26000,
+    salePrice: 21900,
     sizes: ["M", "L", "XL", "XXL"],
     stock: 14,
     featured: true
   }),
   withGallery({
-    id: "sample-mens-linen-shorts",
+    id: "64f000000000000000000003",
     name: "Washed linen drawstring shorts",
     description: "Lightweight linen-blend shorts with a relaxed drawstring waist and a clean hem for warm days.",
     category: "mens-clothing",
@@ -185,7 +187,7 @@ export const sampleProducts: Product[] = [
     featured: false
   }),
   withGallery({
-    id: "sample-womens-satin-blouse",
+    id: "64f000000000000000000004",
     name: "Soft satin drape blouse",
     description: "A fluid satin blouse with a relaxed neckline, gentle sheen, and an easy tuck-in length.",
     category: "womens-clothing",
@@ -197,19 +199,20 @@ export const sampleProducts: Product[] = [
     featured: true
   }),
   withGallery({
-    id: "sample-womens-midi-dress",
+    id: "64f000000000000000000005",
     name: "Printed wrap midi dress",
     description: "A flattering wrap midi dress with a soft waist tie, modest neckline, and movement-friendly skirt.",
     category: "womens-clothing",
     subcategory: "dresses",
     gallery: [...galleries.womensDress],
     price: 34000,
+    salePrice: 28900,
     sizes: ["S", "M", "L", "XL", "XXL"],
     stock: 11,
     featured: true
   }),
   withGallery({
-    id: "sample-womens-wide-leg-pants",
+    id: "64f000000000000000000006",
     name: "High-waist wide-leg pants",
     description: "Polished high-waist trousers with a soft wide leg and a comfortable structured waistband.",
     category: "womens-clothing",
@@ -221,19 +224,20 @@ export const sampleProducts: Product[] = [
     featured: false
   }),
   withGallery({
-    id: "sample-childrens-shirt-set",
+    id: "64f000000000000000000007",
     name: "Kids weekend shirt set",
     description: "A cheerful two-piece kids set with a soft shirt and matching shorts made for play and family outings.",
     category: "childrens-clothing",
     subcategory: "sets",
     gallery: [...galleries.kidsSet],
     price: 17500,
+    salePrice: 14900,
     sizes: ["S", "M", "L"],
     stock: 24,
     featured: true
   }),
   withGallery({
-    id: "sample-childrens-party-dress",
+    id: "64f000000000000000000008",
     name: "Little celebration dress",
     description: "A sweet children’s dress with a soft lining, gentle volume, and easy back closure.",
     category: "childrens-clothing",
@@ -245,7 +249,7 @@ export const sampleProducts: Product[] = [
     featured: true
   }),
   withGallery({
-    id: "sample-childrens-cotton-pants",
+    id: "64f000000000000000000009",
     name: "Kids pull-on cotton pants",
     description: "Durable cotton pants with an elastic waist, roomy pockets, and a neat everyday shape.",
     category: "childrens-clothing",
@@ -257,19 +261,20 @@ export const sampleProducts: Product[] = [
     featured: false
   }),
   withGallery({
-    id: "sample-shoe-clean-sneakers",
+    id: "64f00000000000000000000a",
     name: "Clean everyday sneakers",
     description: "Low-profile sneakers with a neat finish, padded collar, and versatile styling for casual Lagos days.",
     category: "shoes",
     subcategory: "sneakers",
     gallery: [...galleries.mensSneakers],
     price: 29500,
+    salePrice: 25500,
     sizes: [],
     stock: 12,
     featured: true
   }),
   withGallery({
-    id: "sample-shoe-evening-heels",
+    id: "64f00000000000000000000b",
     name: "Polished evening heels",
     description: "A dressy heel with a clean silhouette, secure strap, and refined finish for outings and occasions.",
     category: "shoes",
@@ -281,7 +286,7 @@ export const sampleProducts: Product[] = [
     featured: true
   }),
   withGallery({
-    id: "sample-shoe-soft-sandals",
+    id: "64f00000000000000000000c",
     name: "Soft strap sandals",
     description: "Comfortable open sandals with soft straps and an easy everyday profile for warm weather styling.",
     category: "shoes",
@@ -293,19 +298,20 @@ export const sampleProducts: Product[] = [
     featured: false
   }),
   withGallery({
-    id: "sample-accessory-gold-hoops",
+    id: "64f00000000000000000000d",
     name: "Polished gold hoop earrings",
     description: "Lightweight polished hoops with a secure clasp and a warm finish that works with casual or dressy looks.",
     category: "accessories",
     subcategory: "jewelry",
     gallery: [...galleries.hoops],
     price: 8500,
+    salePrice: 6900,
     sizes: [],
     stock: 30,
     featured: true
   }),
   withGallery({
-    id: "sample-accessory-leather-belt",
+    id: "64f00000000000000000000e",
     name: "Slim leather keeper belt",
     description: "A smooth leather belt with tonal stitching and a compact buckle for trousers, denim, and skirts.",
     category: "accessories",
@@ -317,7 +323,7 @@ export const sampleProducts: Product[] = [
     featured: false
   }),
   withGallery({
-    id: "sample-accessory-silk-scarf",
+    id: "64f00000000000000000000f",
     name: "Printed silk-feel scarf",
     description: "A smooth printed scarf that can be worn around the neck, hair, wrist, or tied to a bag handle.",
     category: "accessories",
@@ -329,19 +335,20 @@ export const sampleProducts: Product[] = [
     featured: true
   }),
   withGallery({
-    id: "sample-bag-structured-tote",
+    id: "64f000000000000000000010",
     name: "Structured everyday tote",
     description: "A roomy structured tote with sturdy handles, clean seams, and enough space for daily essentials.",
     category: "bags",
     subcategory: "totes",
     gallery: [...galleries.tote],
     price: 32500,
+    salePrice: 27900,
     sizes: [],
     stock: 13,
     featured: true
   }),
   withGallery({
-    id: "sample-bag-crossbody",
+    id: "64f000000000000000000011",
     name: "Compact crossbody bag",
     description: "A hands-free crossbody with an adjustable strap, neat compartments, and a polished everyday profile.",
     category: "bags",
@@ -353,13 +360,14 @@ export const sampleProducts: Product[] = [
     featured: true
   }),
   withGallery({
-    id: "sample-bag-evening-clutch",
+    id: "64f000000000000000000012",
     name: "Minimal evening clutch",
     description: "A slim clutch with a soft sheen, magnetic closure, and space for phone, cards, and small essentials.",
     category: "bags",
     subcategory: "clutches",
     gallery: [...galleries.clutch],
     price: 21500,
+    salePrice: 17900,
     sizes: [],
     stock: 9,
     featured: false

@@ -14,15 +14,17 @@ import {
   X
 } from "lucide-react";
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { CartDrawer } from "@/components/cart-drawer";
-import { OrdersDrawer } from "@/components/orders-drawer";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useOverlayDialog } from "@/components/use-overlay-dialog";
-import { WishlistDrawer } from "@/components/wishlist-drawer";
 import { useCart } from "@/components/cart-provider";
 import { businessInfo, primaryCategoryLinks } from "@/lib/business-info";
+
+const CartDrawer = dynamic(() => import("@/components/cart-drawer").then((module) => module.CartDrawer), { ssr: false });
+const OrdersDrawer = dynamic(() => import("@/components/orders-drawer").then((module) => module.OrdersDrawer), { ssr: false });
+const WishlistDrawer = dynamic(() => import("@/components/wishlist-drawer").then((module) => module.WishlistDrawer), { ssr: false });
 
 const utilityLinks = [
   { label: "Home", href: "/" },
@@ -40,11 +42,25 @@ export function Nav() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [verifiedAdminUserId, setVerifiedAdminUserId] = useState<string | null>(null);
   const mobileDialogRef = useOverlayDialog<HTMLDivElement>(mobileOpen, () => setMobileOpen(false));
   const { count, wishlistCount } = useCart();
   const { isSignedIn, isLoaded, user } = useUser();
   const publicMetadata = user?.publicMetadata as { role?: string; admin?: boolean } | undefined;
-  const isAdmin = publicMetadata?.role === "admin" || publicMetadata?.admin === true;
+  const metadataAdmin = publicMetadata?.role === "admin" || publicMetadata?.admin === true;
+  const isAdmin = metadataAdmin || Boolean(user?.id && verifiedAdminUserId === user.id);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || !user?.id || metadataAdmin) return;
+    const controller = new AbortController();
+    fetch("/api/admin/access", { cache: "no-store", signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (data?.isAdmin) setVerifiedAdminUserId(user.id);
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [isLoaded, isSignedIn, metadataAdmin, user?.id]);
 
   useEffect(() => {
     const updateScrolled = () => setScrolled(window.scrollY > 24);
@@ -129,7 +145,7 @@ export function Nav() {
                 </span>
                 <small>Saved</small>
               </button>
-              <button className="nav-action" type="button" onClick={() => setOrdersOpen(true)} aria-label="Open orders">
+              <button className="nav-action orders-nav-action" type="button" onClick={() => setOrdersOpen(true)} aria-label="Open orders">
                 <span className="nav-action-icon"><PackageCheck size={20} /></span>
                 <small>Orders</small>
               </button>
@@ -202,6 +218,15 @@ export function Nav() {
                   {utilityLinks.map((link) => (
                     <Link href={link.href} key={"mobile-" + link.href} onClick={() => setMobileOpen(false)}>{link.label}</Link>
                   ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileOpen(false);
+                      setOrdersOpen(true);
+                    }}
+                  >
+                    Track your orders
+                  </button>
                   {isAdmin ? <Link href="/admin" onClick={() => setMobileOpen(false)}>Admin dashboard</Link> : null}
                   {isSignedIn ? <Link href="/addresses" onClick={() => setMobileOpen(false)}>Saved addresses</Link> : null}
                 </div>
@@ -215,9 +240,9 @@ export function Nav() {
         </nav>
       </header>
 
-      <WishlistDrawer open={wishlistOpen} onClose={() => setWishlistOpen(false)} />
-      <OrdersDrawer open={ordersOpen} onClose={() => setOrdersOpen(false)} />
-      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+      {wishlistOpen ? <WishlistDrawer open onClose={() => setWishlistOpen(false)} /> : null}
+      {ordersOpen ? <OrdersDrawer open onClose={() => setOrdersOpen(false)} /> : null}
+      {cartOpen ? <CartDrawer open onClose={() => setCartOpen(false)} /> : null}
     </>
   );
 }

@@ -1,13 +1,14 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/lib/server/env";
 
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://ebikas-place.example.com";
+  const siteUrl = getSiteUrl();
 
   return {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/admin", "/api"]
+      disallow: ["/admin", "/addresses", "/api"]
     },
     sitemap: `${siteUrl}/sitemap.xml`
   };

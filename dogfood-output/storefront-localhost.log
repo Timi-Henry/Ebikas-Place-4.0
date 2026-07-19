@@ -1,0 +1,21 @@
+
+> ebikas-place@1.0.0 dev
+> next dev --hostname localhost --port 3010
+
+   ▲ Next.js 15.5.19
+   - Local:        http://localhost:3010
+   - Network:      http://localhost:3010
+   - Environments: .env.local
+
+ ✓ Starting...
+ ○ Compiling /instrumentation ...
+ ✓ Compiled /instrumentation in 1224ms (24 modules)
+ ✓ Ready in 21.7s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 1057ms (215 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 37.6s (1451 modules)
+Attention: Clerk collects telemetry data from its SDKs when connected to development instances.
+The data collected is used to inform Clerk's product roadmap.
+To learn more, including how to opt-out from the telemetry program, visit: https://clerk.com/docs/telemetry.
+

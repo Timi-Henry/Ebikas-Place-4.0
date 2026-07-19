@@ -1,6 +1,7 @@
 "use client";
 
 import { PackageCheck, RefreshCw, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { SignInButton, useUser } from "@clerk/nextjs";
 import { useEffect, useMemo, useState } from "react";
@@ -72,7 +73,7 @@ export function OrdersDrawer({ open, onClose }: { open: boolean; onClose: () => 
     const response = await fetch(`/api/orders/${order.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "cancel" })
+      body: JSON.stringify({ action: "cancel", expectedVersion: order.version })
     });
     const data = await response.json().catch(() => ({}));
     setCancellingId("");
@@ -163,7 +164,7 @@ export function OrdersDrawer({ open, onClose }: { open: boolean; onClose: () => 
                   <div className="order-product-list">
                     {order.items.map((item) => (
                       <Link className="order-product-link" href={`/products/${item.productId}`} key={`${order.id}-${item.productId}-${item.selectedSize || "none"}`} onClick={onClose}>
-                        <img src={item.imageUrl} alt={item.name} width={48} height={48} loading="lazy" />
+                        <Image src={item.imageUrl} alt={item.name} width={48} height={48} sizes="48px" />
                         <span>
                           <strong>{item.name}</strong>
                           <small>

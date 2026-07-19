@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import {
   ArrowRight,
   BadgeCheck,
@@ -6,20 +7,20 @@ import {
   Grid2X2,
   Headphones,
   MapPin,
-  PackageCheck,
-  ShieldCheck,
-  Sparkles
+  ShieldCheck
 } from "lucide-react";
-import { CartProvider } from "@/components/cart-provider";
+import { CatalogUnavailableNotice } from "@/components/catalog-unavailable-notice";
 import { Footer } from "@/components/footer";
+import { MarketTicker } from "@/components/market-ticker";
 import { MemberCta } from "@/components/member-cta";
 import { Nav } from "@/components/nav";
-import { ProductBrowser } from "@/components/product-browser";
+import { createProductCardModel } from "@/components/product-card";
+import { ProductRail } from "@/components/product-rail";
 import { StoreEffects } from "@/components/store-effects";
 import { businessInfo } from "@/lib/business-info";
 import { formatTaxonomyLabel, matchesProductFacets } from "@/lib/product-taxonomy";
-import { formatPrice, getCurrentPrice } from "@/lib/pricing";
-import { getProducts } from "@/lib/server/products";
+import { formatPrice, getCurrentPrice, getDiscountPercent } from "@/lib/pricing";
+import { getProductsResult } from "@/lib/server/products";
 
 const categoryStories = [
   { value: "women", familyId: "clothing", audienceId: "women", href: "/shop?family=clothing&audience=women", shortLabel: "Women", copy: "Everyday polish and occasion-ready pieces.", tone: "peach" },
@@ -31,20 +32,32 @@ const categoryStories = [
 ] as const;
 
 export default async function HomePage() {
-  const products = await getProducts();
+  const catalog = await getProductsResult();
+  const products = catalog.ok ? catalog.value : [];
   const featuredProducts = products.filter((product) => product.featured);
   const heroProducts = (featuredProducts.length ? featuredProducts : products).slice(0, 5);
   const taggedNew = products.filter((product) => product.badges?.includes("new"));
   const taggedBest = products.filter((product) => product.badges?.includes("best-seller") || (product.reviewCount || 0) > 20);
   const newArrivals = (taggedNew.length ? taggedNew : products.slice(4)).slice(0, 10);
   const bestSellers = (taggedBest.length ? taggedBest : [...products].sort((a, b) => Number(b.featured) - Number(a.featured))).slice(0, 10);
-  const womensPicks = products.filter((product) => matchesProductFacets(product, { familyId: "clothing", audienceId: "women" })).slice(0, 10);
-  const under20k = products.filter((product) => getCurrentPrice(product) < 20000).slice(0, 10);
+  const discountedProducts = products
+    .filter((product) => product.stock > 0 && getDiscountPercent(product) > 0)
+    .sort((a, b) => getDiscountPercent(b) - getDiscountPercent(a))
+    .slice(0, 10);
   const spotlight = products.find((product) => getCurrentPrice(product) < 20000) || products[0];
+  const productCardsById = new Map(
+    products.map((product) => [
+      product.id,
+      createProductCardModel(product)
+    ])
+  );
+  const cardsFor = (selection: typeof products) => selection.flatMap((product) => {
+    const card = productCardsById.get(product.id);
+    return card ? [card] : [];
+  });
 
   return (
-    <CartProvider>
-      <main className="shell storefront-shell" id="main-content">
+    <main className="shell storefront-shell" id="main-content" tabIndex={-1}>
         <div className="bg-aurora" aria-hidden="true">
           <span className="aurora aurora-1" />
           <span className="aurora aurora-2" />
@@ -55,18 +68,9 @@ export default async function HomePage() {
         <StoreEffects />
         <Nav />
 
-        <section className="market-ticker" aria-label="Store highlights">
-          <div className="market-ticker-track">
-            <span><Sparkles size={14} /> New styles added regularly</span>
-            <span><ShieldCheck size={14} /> Simple account-based shopping</span>
-            <span><BadgeCheck size={14} /> Save pieces for later</span>
-            <span><PackageCheck size={14} /> Track orders from your account</span>
-            <span aria-hidden="true"><Sparkles size={14} /> New styles added regularly</span>
-            <span aria-hidden="true"><ShieldCheck size={14} /> Simple account-based shopping</span>
-            <span aria-hidden="true"><BadgeCheck size={14} /> Save pieces for later</span>
-            <span aria-hidden="true"><PackageCheck size={14} /> Track orders from your account</span>
-          </div>
-        </section>
+        {!catalog.ok ? <CatalogUnavailableNotice framed /> : null}
+
+        <MarketTicker />
 
         <section className="market-hero section-frame" id="home">
           <div className="market-hero-copy">
@@ -81,10 +85,10 @@ export default async function HomePage() {
               Shop clothes, shoes, bags, and accessories for women, men, and kids—with clear prices and easy ordering.
             </p>
             <div className="hero-actions reveal">
-              <a className="btn-primary btn-primary-large" href="/shop">
+              <Link className="btn-primary btn-primary-large" href="/shop">
                 Shop the collection
                 <ArrowRight size={18} />
-              </a>
+              </Link>
               <a className="btn-ghost btn-ghost-light" href="#categories">
                 <Grid2X2 size={18} />
                 Browse categories
@@ -99,7 +103,7 @@ export default async function HomePage() {
 
           <div className="storefront-window reveal" aria-label="Featured styles">
             {heroProducts[0] ? (
-              <a className="window-main" href={"/products/" + heroProducts[0].id}>
+              <Link className="window-main" href={"/products/" + heroProducts[0].id}>
                 <Image
                   src={heroProducts[0].imageUrl}
                   alt={heroProducts[0].name}
@@ -113,11 +117,11 @@ export default async function HomePage() {
                   <strong>{heroProducts[0].name}</strong>
                   <span>{formatPrice(getCurrentPrice(heroProducts[0]))}</span>
                 </span>
-              </a>
+              </Link>
             ) : null}
             <div className="window-side">
               {heroProducts.slice(1, 4).map((product, index) => (
-                <a className={"window-tile window-tile-" + (index + 1)} href={"/products/" + product.id} key={product.id}>
+                <Link className={"window-tile window-tile-" + (index + 1)} href={"/products/" + product.id} key={product.id}>
                   <Image
                     src={product.imageUrl}
                     alt={product.name}
@@ -125,7 +129,7 @@ export default async function HomePage() {
                     sizes="(max-width: 600px) 44vw, 15vw"
                   />
                   <span>{formatTaxonomyLabel(product.category)}</span>
-                </a>
+                </Link>
               ))}
             </div>
             <div className="window-delivery-card">
@@ -164,9 +168,9 @@ export default async function HomePage() {
               <h2 className="reveal">Shop by category</h2>
               <p className="reveal">Start with who you are shopping for, then narrow it down in seconds.</p>
             </div>
-            <a className="inline-link reveal" href="/shop">
+            <Link className="inline-link reveal" href="/shop">
               View everything <ArrowRight size={17} />
-            </a>
+            </Link>
           </div>
           <div className="department-grid">
             {categoryStories.map((category, index) => {
@@ -174,7 +178,7 @@ export default async function HomePage() {
               const product = products.find((item) => matchesProductFacets(item, { familyId: category.familyId, audienceId })) || heroProducts[index % Math.max(1, heroProducts.length)];
               const label = category.shortLabel;
               return (
-                <a
+                <Link
                   className={"department-card department-" + category.tone + " reveal"}
                   href={category.href}
                   key={category.value}
@@ -190,22 +194,38 @@ export default async function HomePage() {
                       <Image src={product.imageUrl} alt="" fill sizes="(max-width: 700px) 50vw, 18vw" />
                     </span>
                   ) : null}
-                </a>
+                </Link>
               );
             })}
           </div>
         </section>
 
-        <ProductBrowser
-          products={featuredProducts.length ? featuredProducts : products.slice(0, 10)}
-          title="This week’s standout styles"
-          eyebrow="Featured edit"
-          showControls={false}
-          autoScroll
-          sectionId="featured"
-          ctaHref="/shop?filter=featured"
-          ctaLabel="See all featured"
-        />
+        {catalog.ok ? (
+          <ProductRail
+            products={cardsFor(featuredProducts.length ? featuredProducts : products.slice(0, 10))}
+            title="This week’s standout styles"
+            eyebrow="Featured edit"
+            autoScroll
+            sectionId="featured"
+            ctaHref="/shop?filter=featured"
+            ctaLabel="See all featured"
+          />
+        ) : null}
+
+        {catalog.ok && discountedProducts.length > 0 ? (
+          <ProductRail
+            products={cardsFor(discountedProducts)}
+            title="Price drops worth seeing"
+            eyebrow="The deal drop"
+            description="A moving edit of in-stock pieces with real markdowns—pause, swipe, or let the rail bring the next find to you."
+            autoScroll
+            carouselLabel="discounted products"
+            sectionId="sale"
+            variant="sale"
+            ctaHref="/shop?filter=discounted"
+            ctaLabel="Shop all sale items"
+          />
+        ) : null}
 
         {spotlight ? (
           <section className="price-spotlight section-frame reveal">
@@ -213,11 +233,11 @@ export default async function HomePage() {
               <span className="eyebrow">Smart style, sensible spend</span>
               <h2>Good finds under NGN 20k</h2>
               <p>Easy additions for everyday outfits, gifting, and the finishing touches your wardrobe needs.</p>
-              <a className="btn-primary" href="/shop?price=under-20000">
+              <Link className="btn-primary" href="/shop?price=under-20000">
                 Shop under NGN 20k <ArrowRight size={17} />
-              </a>
+              </Link>
             </div>
-            <a className="spotlight-product" href={"/products/" + spotlight.id}>
+            <Link className="spotlight-product" href={"/products/" + spotlight.id}>
               <span className="spotlight-image">
                 <Image src={spotlight.imageUrl} alt={spotlight.name} fill sizes="(max-width: 760px) 80vw, 30vw" />
               </span>
@@ -226,30 +246,32 @@ export default async function HomePage() {
                 <strong>{spotlight.name}</strong>
                 <b>{formatPrice(getCurrentPrice(spotlight))}</b>
               </span>
-            </a>
+            </Link>
           </section>
         ) : null}
 
-        <ProductBrowser
-          products={newArrivals}
-          title="Just landed"
-          eyebrow="New to the store"
-          showControls={false}
-          compact
-          sectionId="new-arrivals"
-          ctaHref="/shop?filter=new"
-          ctaLabel="Shop new arrivals"
-        />
-        <ProductBrowser
-          products={bestSellers}
-          title="Popular right now"
-          eyebrow="Customer favorites"
-          showControls={false}
-          compact
-          sectionId="best-sellers"
-          ctaHref="/shop?filter=best-seller"
-          ctaLabel="Shop popular picks"
-        />
+        {catalog.ok ? (
+          <>
+            <ProductRail
+              products={cardsFor(newArrivals)}
+              title="Just landed"
+              eyebrow="New to the store"
+              compact
+              sectionId="new-arrivals"
+              ctaHref="/shop?filter=new"
+              ctaLabel="Shop new arrivals"
+            />
+            <ProductRail
+              products={cardsFor(bestSellers)}
+              title="Popular right now"
+              eyebrow="Customer favorites"
+              compact
+              sectionId="best-sellers"
+              ctaHref="/shop?filter=best-seller"
+              ctaLabel="Shop popular picks"
+            />
+          </>
+        ) : null}
 
         <section className="service-story section-frame" id="about">
           <div className="service-story-copy reveal">
@@ -277,34 +299,8 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {womensPicks.length > 0 ? (
-          <ProductBrowser
-            products={womensPicks}
-            title="The women’s edit"
-            eyebrow="Styled for now"
-            showControls={false}
-            compact
-            sectionId="womens-edit"
-            ctaHref="/shop?family=clothing&audience=women"
-            ctaLabel="Shop women"
-          />
-        ) : null}
-        {under20k.length > 0 ? (
-          <ProductBrowser
-            products={under20k}
-            title="Everyday value"
-            eyebrow="Under NGN 20k"
-            showControls={false}
-            compact
-            sectionId="under-20k"
-            ctaHref="/shop?price=under-20000"
-            ctaLabel="See every smart buy"
-          />
-        ) : null}
-
         <MemberCta />
         <Footer />
-      </main>
-    </CartProvider>
+    </main>
   );
 }

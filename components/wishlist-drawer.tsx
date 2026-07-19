@@ -1,6 +1,7 @@
 "use client";
 
 import { Heart, ShoppingBag, Trash2, X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/components/cart-provider";
 import { useOverlayDialog } from "@/components/use-overlay-dialog";
@@ -33,7 +34,7 @@ export function WishlistDrawer({ open, onClose }: { open: boolean; onClose: () =
             wishlistItems.map((item) => (
               <article className="cart-item" key={item.id}>
                 <Link href={`/products/${item.id}`} onClick={onClose}>
-                  <img src={item.imageUrl} alt="" width={86} height={104} loading="lazy" />
+                  <Image src={item.imageUrl} alt="" width={86} height={104} sizes="86px" />
                 </Link>
                 <div>
                   <strong>{item.name}</strong>

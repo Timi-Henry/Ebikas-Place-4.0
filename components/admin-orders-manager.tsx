@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, PackageCheck, Search, Send, XCircle } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CopyTextButton } from "@/components/copy-text-button";
@@ -81,7 +82,7 @@ export function AdminOrdersManager({ orders: initialOrders }: { orders: Order[] 
     const response = await fetch(`/api/orders/${order.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, rejectionReason })
+      body: JSON.stringify({ action, rejectionReason, expectedVersion: order.version })
     });
     const data = await response.json().catch(() => ({}));
     setUpdatingId("");
@@ -191,7 +192,9 @@ export function AdminOrdersManager({ orders: initialOrders }: { orders: Order[] 
                 ) : (
                   <small>No WhatsApp</small>
                 )}
-                <small>User ID: {order.userId}</small>
+                <small>
+                  User: {order.userId.startsWith("deleted-user:") ? "Deleted account" : order.userId}
+                </small>
                 <small>{new Date(order.createdAt).toLocaleString()} - {orderStatusLabels[order.status]}</small>
                 <span className={`order-status-pill status-${order.status}`}>{orderStatusLabels[order.status]}</span>
                 {order.status === "rejected" && order.rejectionReason ? (
@@ -215,7 +218,7 @@ export function AdminOrdersManager({ orders: initialOrders }: { orders: Order[] 
                   {order.items.map((item) => (
                     <div className="admin-order-product" key={`${order.id}-${item.productId}-${item.selectedSize || "none"}`}>
                       <Link href={`/products/${item.productId}`} aria-label={`Open ${item.name} product page`}>
-                        <img src={item.imageUrl} alt={item.name} loading="lazy" />
+                        <Image src={item.imageUrl} alt={item.name} width={52} height={64} sizes="52px" />
                       </Link>
                       <div>
                         <Link href={`/products/${item.productId}`}>{item.name}</Link>

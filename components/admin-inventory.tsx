@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowUpDown, Eye, Pencil, Search, Trash2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AdminToast, type AdminToastData, buildCloudinaryCleanupToast, retryCloudinaryCleanup } from "@/components/admin-toast";
@@ -136,24 +137,32 @@ export function AdminInventory({ products }: { products: Product[] }) {
 
     setDeletingId(product.id);
     setMessage("Deleting product...");
-    const response = await fetch(`/api/products/${product.id}`, { method: "DELETE" });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      setDeletingId(null);
-      setMessage(data.error || "Product could not be deleted.");
-      return;
-    }
-
-    setItems((current) => current.filter((item) => item.id !== product.id));
-    setDeletingId(null);
-    setMessage("Product deleted.");
-    setToast(
-      buildCloudinaryCleanupToast(data.cloudinaryCleanup, `Deleting ${product.name}`) || {
-        tone: "success",
-        title: "Product deleted",
-        message: "The product was removed from MongoDB and attached Cloudinary images were cleaned up."
+    try {
+      const response = await fetch(`/api/products/${product.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expectedVersion: product.version ?? 1 })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setMessage(data.error || "Product could not be deleted.");
+        return;
       }
-    );
+
+      setItems((current) => current.filter((item) => item.id !== product.id));
+      setMessage("Product deleted.");
+      setToast(
+        buildCloudinaryCleanupToast(data.cloudinaryCleanup, `Deleting ${product.name}`) || {
+          tone: "success",
+          title: "Product deleted",
+          message: "The product was removed from MongoDB and attached Cloudinary images were queued for cleanup."
+        }
+      );
+    } catch {
+      setMessage("The product could not be deleted because the network request failed.");
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   return (
@@ -206,7 +215,7 @@ export function AdminInventory({ products }: { products: Product[] }) {
       <div className="admin-product-list">
         {paginatedProducts.map((product) => (
           <article className="admin-product-row" key={product.id}>
-            <img src={product.imageUrl} alt="" />
+            <Image src={product.imageUrl} alt="" width={76} height={92} sizes="76px" />
             <div>
               <strong>{product.name}</strong>
               <span>{productClassification(product)} � {formatPrice(getCurrentPrice(product))} � {product.stock} in stock</span>

@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft, ExternalLink, Plus, Trash2, Upload } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { AdminClassificationSection } from "@/components/admin-classification-section";
@@ -10,8 +11,8 @@ import { defaultCatalogTaxonomy, hydrateProductTaxonomy } from "@/lib/product-ta
 import type { CatalogTaxonomy, Product, ProductBadge, ProductSize, ProductTaxonomyAttribute } from "@/lib/types";
 
 type Status = "idle" | "saving" | "done" | "error";
-type ImageRecord = { url: string; publicId?: string; choice: string };
-type SelectedImage = { id: string; file: File };
+type ImageRecord = { url: string; publicId?: string; stageId?: string; choice: string };
+type SelectedImage = { id: string; file: File; uploadKey: string };
 const maxProductImages = 8;
 const sizeOptions: Array<ProductSize | "NONE"> = ["NONE", "S", "M", "L", "XL", "XXL"];
 const badgeOptions: Array<{ value: ProductBadge; label: string; help: string }> = [
@@ -62,6 +63,7 @@ export function AdminProductForm({
     choice: `existing-${index}`
   })));
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>([]);
+  const [currentVersion, setCurrentVersion] = useState(product?.version ?? 1);
   const [pastedImageUrl, setPastedImageUrl] = useState("");
   const [mainImageChoice, setMainImageChoice] = useState(currentImageUrls.length ? "existing-0" : "file-0");
   const [imageNotice, setImageNotice] = useState("");
@@ -115,7 +117,7 @@ export function AdminProductForm({
     const additions = files
       .filter((file) => !selectedKeys.has(`${file.name}-${file.size}-${file.lastModified}`))
       .slice(0, availableSlots)
-      .map((file, index) => ({ id: `file-${Date.now()}-${index}`, file }));
+      .map((file, index) => ({ id: `file-${Date.now()}-${index}`, file, uploadKey: globalThis.crypto.randomUUID() }));
 
     if (!additions.length) {
       setImageNotice("Those images are already in the gallery.");
@@ -203,12 +205,17 @@ export function AdminProductForm({
       setMessage(`A product can have up to ${maxProductImages} images.`);
       return;
     }
-    const uploadedImages: Array<{ secureUrl: string; publicId: string }> = [];
+    const uploadedImages: Array<{ secureUrl: string; publicId: string; stageId: string }> = [];
 
-    for (const { file } of selectedImages) {
+    try {
+      for (const { file, uploadKey } of selectedImages) {
       const uploadForm = new FormData();
       uploadForm.set("image", file);
-      const uploadResponse = await fetch("/api/uploads", { method: "POST", body: uploadForm });
+      const uploadResponse = await fetch("/api/uploads", {
+        method: "POST",
+        headers: { "Idempotency-Key": uploadKey },
+        body: uploadForm
+      });
       const uploadData = await uploadResponse.json();
       if (!uploadResponse.ok) {
         await cleanupUploadedImagesAfterFailure(uploadedImages);
@@ -216,13 +223,14 @@ export function AdminProductForm({
         setMessage(uploadData.error || "Image upload failed.");
         return;
       }
-      uploadedImages.push(uploadData.image);
-    }
+        uploadedImages.push(uploadData.image);
+      }
 
     const pastedUrl = pastedImageUrl.trim();
-    let imageRecords: ImageRecord[] = [...existingImages, ...uploadedImages.map((image, index) => ({
+    const imageRecords: ImageRecord[] = [...existingImages, ...uploadedImages.map((image, index) => ({
       url: image.secureUrl,
       publicId: image.publicId,
+      stageId: image.stageId,
       choice: selectedImages[index].id
     }))];
 
@@ -233,6 +241,7 @@ export function AdminProductForm({
     const orderedImages = moveSelectedImageFirst(imageRecords, mainImageChoice);
     const imageUrls = orderedImages.map((image) => image.url);
     const imagePublicIds = orderedImages.map((image) => image.publicId).filter((publicId): publicId is string => Boolean(publicId));
+    const imageStageIds = orderedImages.map((image) => image.stageId).filter((stageId): stageId is string => Boolean(stageId));
     const primaryPublicId = orderedImages[0]?.publicId;
     const selectedBadges = form.getAll("badges").map(String);
     const badges = mode === "create" ? [...new Set(["new", ...selectedBadges])] : selectedBadges;
@@ -264,7 +273,9 @@ export function AdminProductForm({
         imageUrls,
         imagePublicId: primaryPublicId,
         imagePublicIds,
-        sizes: selectedSizes
+        imageStageIds,
+        sizes: selectedSizes,
+        expectedVersion: mode === "update" && product ? currentVersion : undefined
       })
     });
     const productData = await productResponse.json();
@@ -296,6 +307,7 @@ export function AdminProductForm({
       setMainImageChoice("file-0");
       setImageNotice("");
     } else {
+      setCurrentVersion(productData.product?.version ?? currentVersion + 1);
       setExistingImages(orderedImages.map((image, index) => ({ ...image, choice: `existing-${index}` })));
       setSelectedImages([]);
       setPastedImageUrl("");
@@ -304,13 +316,18 @@ export function AdminProductForm({
     }
     setStatus("done");
     setMessage(mode === "update" ? "Product updated. Changes are now saved." : "Product saved. It will appear in the storefront after refresh.");
-    setToast(
-      buildCloudinaryCleanupToast(productData.cloudinaryCleanup, mode === "update" ? "Updating product images" : "Saving product") || {
-        tone: "success",
-        title: mode === "update" ? "Product updated" : "Product saved",
-        message: mode === "update" ? "Product changes are saved and Cloudinary cleanup is complete." : "The product was saved successfully."
-      }
-    );
+      setToast(
+        buildCloudinaryCleanupToast(productData.cloudinaryCleanup, mode === "update" ? "Updating product images" : "Saving product") || {
+          tone: "success",
+          title: mode === "update" ? "Product updated" : "Product saved",
+          message: mode === "update" ? "Product changes are saved and replaced media is queued for cleanup." : "The product was saved successfully."
+        }
+      );
+    } catch (error) {
+      await cleanupUploadedImagesAfterFailure(uploadedImages).catch(() => undefined);
+      setStatus("error");
+      setMessage(error instanceof Error ? error.message : "The product could not be saved because the network request failed.");
+    }
   }
 
   return (
@@ -419,7 +436,7 @@ export function AdminProductForm({
                   onClick={() => setMainImageChoice(image.choice)}
                   aria-label={`Make this the main image${mainImageChoice === image.choice ? "; currently selected" : ""}`}
                 >
-                  <img src={image.url} alt="" />
+                  <Image src={image.url} alt="" width={160} height={190} sizes="160px" unoptimized />
                   <small>{mainImageChoice === image.choice ? "Main" : "Gallery"}</small>
                 </button>
                 <button className="admin-remove-gallery-image" type="button" onClick={() => removeExistingImage(image.choice)} aria-label="Remove this image">

@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, typecheck, and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Run quality checks
+        run: npm run check
+
+      - name: Build production bundle
+        env:
+          NEXT_PUBLIC_SITE_URL: https://example.test
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ZXhhbXBsZS50ZXN0JA
+          CLERK_SECRET_KEY: sk_test_ci_placeholder
+          MONGODB_URI: mongodb://127.0.0.1:1/ci
+          MONGODB_DB: ci
+          CLOUDINARY_CLOUD_NAME: ci-placeholder
+          CLOUDINARY_API_KEY: ci-placeholder
+          CLOUDINARY_API_SECRET: ci-placeholder
+          CRON_SECRET: ci-placeholder-secret-at-least-32-characters
+          INNGEST_DEV: "0"
+          INNGEST_EVENT_KEY: evt_ci_placeholder
+          INNGEST_SIGNING_KEY: signkey-ci-placeholder
+          BREVO_API_KEY: xkeysib-ci-placeholder
+          BREVO_SENDER_EMAIL: orders@example.test
+          BREVO_SENDER_NAME: Ebika's Place
+          ORDER_ADMIN_EMAIL: owner@example.test
+        run: npm run build

@@ -3205,7 +3205,7 @@ p {
 
 .admin-denied p {
   max-width: 620px;
-  color: rgba(255, 255, 255, 0.68) !important;
+  color: var(--store-muted, #65708a) !important;
   line-height: 1.6;
 }
 

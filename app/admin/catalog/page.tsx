@@ -1,18 +1,16 @@
 import { AdminAccessDenied } from "@/components/admin-access-denied";
 import { AdminCatalogManager } from "@/components/admin-catalog-manager";
 import { AdminSectionNav } from "@/components/admin-section-nav";
-import { CartProvider } from "@/components/cart-provider";
 import { Nav } from "@/components/nav";
 import { requireAdmin } from "@/lib/server/auth";
 import { getCatalogTaxonomy } from "@/lib/server/catalog-taxonomy";
 
 export default async function AdminCatalogPage() {
   const admin = await requireAdmin();
-  const catalog = await getCatalogTaxonomy();
+  const catalog = admin.ok ? await getCatalogTaxonomy() : null;
 
   return (
-    <CartProvider>
-      <main className="shell storefront-shell admin-shell" id="main-content">
+    <main className="shell storefront-shell admin-shell" id="main-content" tabIndex={-1}>
         <Nav />
         <div className="admin-main admin-main-wide">
           <section className="admin-card">
@@ -22,10 +20,9 @@ export default async function AdminCatalogPage() {
               Manage reusable departments, categories, product types, and audiences without creating duplicate product records.
             </p>
             <AdminSectionNav active="catalog" />
-            {admin.ok ? <AdminCatalogManager initialCatalog={catalog} /> : <AdminAccessDenied message={admin.message} />}
+            {admin.ok && catalog ? <AdminCatalogManager initialCatalog={catalog} /> : <AdminAccessDenied message={admin.message} />}
           </section>
         </div>
-      </main>
-    </CartProvider>
+    </main>
   );
 }

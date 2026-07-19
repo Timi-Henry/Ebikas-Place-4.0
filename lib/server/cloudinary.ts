@@ -1,23 +1,55 @@
 import "server-only";
 import { v2 as cloudinary } from "cloudinary";
+import { getCloudinaryEnvironment } from "@/lib/server/env";
 import type { CloudinaryCleanupIssue, CloudinaryCleanupResult } from "@/lib/types";
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true
-});
+function configureCloudinary() {
+  const environment = getCloudinaryEnvironment();
+  cloudinary.config({
+    cloud_name: environment.cloudName,
+    api_key: environment.apiKey,
+    api_secret: environment.apiSecret,
+    secure: true
+  });
+  return environment;
+}
 
-export async function uploadImage(buffer: Buffer) {
-  const folder = process.env.CLOUDINARY_UPLOAD_FOLDER || "ebikas-place/products";
+export type CloudinaryUploadOptions = {
+  /** A server-generated path relative to CLOUDINARY_UPLOAD_FOLDER. */
+  publicId?: string;
+};
+
+function normalizeRequestedPublicId(publicId: string | undefined) {
+  if (publicId === undefined) return undefined;
+  const normalized = publicId.trim();
+  const segments = normalized.split("/");
+  if (
+    normalized.length === 0 ||
+    normalized.length > 160 ||
+    segments.some((segment) => !/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(segment))
+  ) {
+    throw new Error("Cloudinary public ID is invalid.");
+  }
+  return normalized;
+}
+
+export async function uploadImage(buffer: Buffer, options: CloudinaryUploadOptions = {}) {
+  const { uploadFolder } = configureCloudinary();
+  const publicId = normalizeRequestedPublicId(options.publicId);
 
   return new Promise<{ secureUrl: string; publicId: string }>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
-        folder,
+        folder: uploadFolder,
         resource_type: "image",
-        transformation: [{ quality: "auto", fetch_format: "auto" }]
+        transformation: [{ quality: "auto", fetch_format: "auto" }],
+        ...(publicId
+          ? {
+              public_id: publicId,
+              unique_filename: false,
+              overwrite: false
+            }
+          : {})
       },
       (error, result) => {
         if (error || !result) {
@@ -47,9 +79,22 @@ function wait(ms: number) {
 }
 
 function errorMessage(error: unknown) {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  return "Unknown Cloudinary error.";
+  const raw = error instanceof Error ? error.message : typeof error === "string" ? error : "";
+  const status =
+    typeof error === "object" && error !== null
+      ? Number((error as { http_code?: unknown; statusCode?: unknown }).http_code || (error as { statusCode?: unknown }).statusCode)
+      : 0;
+
+  // Vendor errors can echo configuration values. Only retain a safe category for callers and logs.
+  if (status === 401 || status === 403 || /api_key|api secret|signature|credentials|cloud_name/i.test(raw)) {
+    return "Cloudinary rejected the configured credentials or permissions.";
+  }
+  if (status === 429 || /rate|429/i.test(raw)) return "Cloudinary rate limited the cleanup request.";
+  if (status >= 500 || transientCloudinaryErrorPattern.test(raw)) {
+    return "Cloudinary is temporarily unavailable.";
+  }
+  if (status === 400 || /invalid|public.?id/i.test(raw)) return "Cloudinary rejected the asset identifier.";
+  return "Cloudinary cleanup failed.";
 }
 
 function withoutImageExtension(value: string) {
@@ -67,7 +112,7 @@ function safeDecode(value: string) {
 function parseCloudinaryPublicId(value: string) {
   try {
     const url = new URL(value);
-    if (!url.hostname.includes("res.cloudinary.com")) return "";
+    if (url.protocol !== "https:" || url.hostname !== "res.cloudinary.com") return "";
 
     const marker = "/image/upload/";
     const markerIndex = url.pathname.indexOf(marker);
@@ -258,15 +303,16 @@ function mergeCleanupResults(results: CloudinaryCleanupResult[]): CloudinaryClea
 function logCleanupResult(result: CloudinaryCleanupResult) {
   if (result.failed.length) {
     console.error("[cloudinary cleanup] Failed to delete image assets.", {
-      failed: result.failed,
-      deleted: result.deleted,
-      alreadyMissing: result.alreadyMissing
+      failedCount: result.failed.length,
+      retryableCount: result.failed.filter((issue) => issue.retryable).length,
+      deletedCount: result.deleted.length,
+      alreadyMissingCount: result.alreadyMissing.length
     });
   }
 
   if (result.recovered.length) {
     console.warn("[cloudinary cleanup] Deleted image assets after public ID fallback.", {
-      recovered: result.recovered
+      recoveredCount: result.recovered.length
     });
   }
 }
@@ -275,6 +321,7 @@ export async function deleteImages(publicIds: string[] = []): Promise<Cloudinary
   const uniqueIds = [...new Set(publicIds.map((publicId) => publicId.trim()).filter(Boolean))];
   if (uniqueIds.length === 0) return emptyCleanupResult();
 
+  configureCloudinary();
   const result = mergeCleanupResults(await Promise.all(uniqueIds.map(deleteOneImage)));
   logCleanupResult(result);
   return result;
