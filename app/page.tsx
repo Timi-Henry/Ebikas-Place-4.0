@@ -76,7 +76,7 @@ export default async function HomePage() {
           <div className="market-hero-copy">
             <div className="hero-kicker reveal">
               <span className="pulse-dot" />
-              Everyday style, thoughtfully selected
+              {businessInfo.tagline}
             </div>
             <h1 className="reveal">
               Your next favorite look is <em>already here.</em>
@@ -217,7 +217,7 @@ export default async function HomePage() {
             products={cardsFor(discountedProducts)}
             title="Price drops worth seeing"
             eyebrow="The deal drop"
-            description="A moving edit of in-stock pieces with real markdowns—pause, swipe, or let the rail bring the next find to you."
+            description="A rotating edit of in-stock pieces with real markdowns, refreshed as the catalog changes."
             autoScroll
             carouselLabel="discounted products"
             sectionId="sale"

@@ -1,8 +1,10 @@
+import { BrandMark } from "@/components/brand-mark";
+
 export default function Loading() {
   return (
     <main className="store-state-page store-loading-page" id="main-content" tabIndex={-1} aria-busy="true" aria-live="polite">
       <div className="store-state-brand" aria-hidden="true">
-        <span>E</span>
+        <BrandMark />
         <strong>Ebika’s Place</strong>
       </div>
       <section className="store-loading-card">

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, Heart, MapPin, ShieldCheck, ShoppingBag, Truck } from "lucide-react";
+import { Check, ChevronDown, Heart, MapPin, PackageX, ShieldCheck, ShoppingBag, Truck } from "lucide-react";
 import { useRef, useState } from "react";
 import { useCart } from "@/components/cart-provider";
 import { ProductRating } from "@/components/product-rating";
@@ -19,8 +19,11 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
   const currentPrice = getCurrentPrice(product);
   const compareAt = getCompareAtPrice(product);
   const discount = getDiscountPercent(product);
+  const soldOut = product.stock <= 0;
 
   function addToCart() {
+    if (soldOut) return;
+
     if (sizes.length > 0 && !selectedSize) {
       setSizeError("Choose a size before adding this item to your cart.");
       sizePickerRef.current?.focus();
@@ -74,7 +77,17 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
           Delivery is calculated separately. We will confirm fulfillment details after your order is placed.
         </p>
 
-        {sizes.length > 0 ? (
+        {soldOut ? (
+          <div className="product-sold-out-notice" role="status">
+            <PackageX size={22} aria-hidden="true" />
+            <span>
+              <strong>Sold out</strong>
+              <small>This item is currently unavailable. Save it and check back soon.</small>
+            </span>
+          </div>
+        ) : null}
+
+        {sizes.length > 0 && !soldOut ? (
           <fieldset
             aria-describedby={sizeError ? "product-size-guidance product-size-error" : "product-size-guidance"}
             aria-invalid={Boolean(sizeError)}
@@ -114,8 +127,9 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
         ) : null}
 
         <div className="product-stock-row">
-          <span>
-            <Check size={16} /> {product.stock > 0 ? `${product.stock} in stock` : "Currently unavailable"}
+          <span className={`product-stock-state ${soldOut ? "is-sold-out" : ""}`}>
+            {soldOut ? <PackageX size={16} /> : <Check size={16} />}
+            {soldOut ? "Sold out" : `${product.stock} in stock`}
           </span>
           <span>
             <Truck size={16} /> Lagos delivery available
@@ -124,14 +138,14 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
 
         <div className="product-detail-actions">
           <button
-            aria-describedby={sizes.length ? (sizeError ? "product-size-guidance product-size-error" : "product-size-guidance") : undefined}
+            aria-describedby={!soldOut && sizes.length ? (sizeError ? "product-size-guidance product-size-error" : "product-size-guidance") : undefined}
             className="btn-primary"
-            disabled={product.stock <= 0}
+            disabled={soldOut}
             type="button"
             onClick={addToCart}
           >
-            <ShoppingBag size={18} />
-            <span>Add to cart</span>
+            {soldOut ? <PackageX size={18} /> : <ShoppingBag size={18} />}
+            <span>{soldOut ? "Sold out" : "Add to cart"}</span>
           </button>
           <button className="btn-ghost" type="button" onClick={() => toggleWishlist(product)}>
             <Heart size={18} fill={isWishlisted(product.id) ? "currentColor" : "none"} />

@@ -46,7 +46,7 @@ export function ProductRail({
         {variant === "sale" ? (
           <span className="sale-rail-status reveal">
             <i aria-hidden="true" />
-            Swipe, pause, or let the deals move
+            Fresh offers rotate automatically
           </span>
         ) : null}
       </div>

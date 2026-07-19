@@ -2418,7 +2418,7 @@ p {
 }
 
 .admin-card p {
-  color: rgba(255, 255, 255, 0.68) !important;
+  color: var(--muted);
 }
 
 .admin-form {

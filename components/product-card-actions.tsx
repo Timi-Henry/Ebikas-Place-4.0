@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, Plus } from "lucide-react";
+import { Heart, PackageX, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/cart-provider";
 import type { Product, ProductSize } from "@/lib/types";
@@ -25,8 +25,10 @@ export function ProductCardActions({ product }: { product: ProductCardActionProd
   const { addItem, isWishlisted, toggleWishlist } = useCart();
   const wishlisted = isWishlisted(product.id);
   const needsSize = Boolean(product.sizes?.length);
+  const soldOut = product.stock <= 0;
 
   function openProductOrAddToCart() {
+    if (soldOut) return;
     if (needsSize) {
       router.push(`/products/${product.id}`);
       return;
@@ -46,12 +48,13 @@ export function ProductCardActions({ product }: { product: ProductCardActionProd
       </button>
       <button
         className="add-to-cart-btn"
+        disabled={soldOut}
         type="button"
         onClick={openProductOrAddToCart}
-        aria-label={needsSize ? `Choose a size for ${product.name}` : `Add ${product.name} to cart`}
+        aria-label={soldOut ? `${product.name} is sold out` : needsSize ? `Choose a size for ${product.name}` : `Add ${product.name} to cart`}
       >
-        <Plus size={18} />
-        <span>{needsSize ? "Select size" : "Add to bag"}</span>
+        {soldOut ? <PackageX size={18} /> : <Plus size={18} />}
+        <span>{soldOut ? "Sold out" : needsSize ? "Select size" : "Add to bag"}</span>
       </button>
     </>
   );

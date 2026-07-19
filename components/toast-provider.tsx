@@ -43,8 +43,15 @@ function StoreToast({ toast, onClose }: { toast: ToastItem; onClose: (id: string
     return () => window.clearTimeout(timeout);
   }, [onClose, toast.durationMs, toast.id]);
 
+  const isAssertive = toast.tone === "error" || toast.tone === "warning";
+
   return (
-    <article className={`store-toast ${toast.tone}`} role="status" aria-live="polite">
+    <article
+      className={`store-toast ${toast.tone}`}
+      role={isAssertive ? "alert" : "status"}
+      aria-live={isAssertive ? "assertive" : "polite"}
+      aria-atomic="true"
+    >
       <div className="store-toast-icon" aria-hidden="true">
         <ToastIcon tone={toast.tone} />
       </div>

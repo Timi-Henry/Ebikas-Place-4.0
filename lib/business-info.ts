@@ -2,6 +2,7 @@ import { productCategories } from "@/lib/product-taxonomy";
 
 export const businessInfo = {
   name: "Ebika's Place",
+  tagline: "Where style meets fashion",
   phone: "09061199345",
   phoneHref: "tel:09061199345",
   whatsappHref: "https://wa.me/2349061199345",

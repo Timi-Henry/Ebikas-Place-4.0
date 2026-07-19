@@ -18,6 +18,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { BrandMark } from "@/components/brand-mark";
 import { useOverlayDialog } from "@/components/use-overlay-dialog";
 import { useCart } from "@/components/cart-provider";
 import { businessInfo, primaryCategoryLinks } from "@/lib/business-info";
@@ -95,10 +96,10 @@ export function Nav() {
         <nav className="nav" aria-label="Main navigation">
           <div className="nav-inner">
             <Link className="brand" href="/" aria-label="Ebika's Place home">
-              <span className="brand-mark">E</span>
+              <BrandMark priority />
               <span className="brand-copy">
                 <strong>Ebika’s <b>Place</b></strong>
-                <small>Online fashion store</small>
+                <small>{businessInfo.tagline}</small>
               </span>
             </Link>
 
@@ -138,7 +139,7 @@ export function Nav() {
                 <small>Search</small>
               </button>
               <ThemeToggle className="nav-action nav-theme-action" />
-              <button className="nav-action" type="button" onClick={() => setWishlistOpen(true)} aria-label="Open wishlist">
+              <button className="nav-action wishlist-nav-action" type="button" onClick={() => setWishlistOpen(true)} aria-label="Open wishlist">
                 <span className="nav-action-icon">
                   <Heart size={20} />
                   {wishlistCount > 0 ? <b>{wishlistCount}</b> : null}
@@ -204,8 +205,28 @@ export function Nav() {
               <button className="mobile-nav-backdrop" type="button" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />
               <div ref={mobileDialogRef} className="mobile-nav-panel" role="dialog" aria-modal="true" aria-label="Mobile navigation" tabIndex={-1}>
                 <div className="mobile-nav-head">
-                  <strong>Shop Ebika’s Place</strong>
+                  <span className="mobile-nav-brand"><BrandMark /><strong>Menu</strong></span>
                   <button type="button" onClick={() => setMobileOpen(false)} aria-label="Close menu" data-dialog-close><X size={20} /></button>
+                </div>
+                <div className="mobile-nav-account-tools" aria-label="Account and appearance">
+                  {isLoaded && !isSignedIn ? (
+                    <SignInButton mode="modal">
+                      <button type="button" onClick={() => setMobileOpen(false)}>
+                        <UserRound size={18} />
+                        <span><strong>Sign in</strong><small>Access orders and saved details</small></span>
+                      </button>
+                    </SignInButton>
+                  ) : null}
+                  {isLoaded && isSignedIn ? (
+                    <div className="mobile-nav-account-summary">
+                      <UserButton />
+                      <span><strong>Account</strong><small>Manage your profile</small></span>
+                    </div>
+                  ) : null}
+                  <div className="mobile-nav-theme-row">
+                    <ThemeToggle className="mobile-nav-theme-toggle" />
+                    <span><strong>Change theme</strong><small>Switch light or dark mode</small></span>
+                  </div>
                 </div>
                 <div className="mobile-nav-categories">
                   <span>Departments</span>
@@ -218,6 +239,15 @@ export function Nav() {
                   {utilityLinks.map((link) => (
                     <Link href={link.href} key={"mobile-" + link.href} onClick={() => setMobileOpen(false)}>{link.label}</Link>
                   ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileOpen(false);
+                      setWishlistOpen(true);
+                    }}
+                  >
+                    Saved items
+                  </button>
                   <button
                     type="button"
                     onClick={() => {

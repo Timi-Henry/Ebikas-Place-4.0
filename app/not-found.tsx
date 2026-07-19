@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { StoreEffects } from "@/components/store-effects";
+import { BrandMark } from "@/components/brand-mark";
 
 const categoryLinks = [
   { href: "/shop?family=clothing&audience=women", label: "Women" },
@@ -13,7 +14,7 @@ export default function NotFound() {
     <main className="store-state-page" id="main-content" tabIndex={-1}>
       <StoreEffects />
       <Link className="store-state-brand" href="/" aria-label="Ebika's Place home">
-        <span aria-hidden="true">E</span>
+        <BrandMark />
         <strong>Ebika’s Place</strong>
       </Link>
       <section className="store-state-card" aria-labelledby="not-found-title">

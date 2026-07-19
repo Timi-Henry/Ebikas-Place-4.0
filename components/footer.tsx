@@ -1,5 +1,6 @@
 import { ArrowRight, MapPin, MessageCircle, PackageCheck, Phone, ShieldCheck, ShoppingBag, Truck } from "lucide-react";
 import Link from "next/link";
+import { BrandMark } from "@/components/brand-mark";
 import { businessInfo, footerCategoryLinks } from "@/lib/business-info";
 
 export function Footer() {
@@ -27,10 +28,10 @@ export function Footer() {
       <div className="site-footer-grid">
         <div className="footer-brand">
           <Link className="brand footer-logo" href="/">
-            <span className="brand-mark">E</span>
+            <BrandMark />
             <span className="brand-copy">
               <strong>Ebika’s <b>Place</b></strong>
-              <small>Online fashion store</small>
+              <small>{businessInfo.tagline}</small>
             </span>
           </Link>
           <p>

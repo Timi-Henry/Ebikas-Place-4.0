@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { StoreEffects } from "@/components/store-effects";
+import { BrandMark } from "@/components/brand-mark";
 
 export default function Error({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <main className="store-state-page" id="main-content" tabIndex={-1}>
       <StoreEffects />
       <Link className="store-state-brand" href="/" aria-label="Ebika's Place home">
-        <span aria-hidden="true">E</span>
+        <BrandMark />
         <strong>Ebika’s Place</strong>
       </Link>
       <section className="store-state-card" aria-labelledby="error-title">

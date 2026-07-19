@@ -1,7 +1,4 @@
-"use client";
-
-import { BadgeCheck, PackageCheck, Pause, Play, ShieldCheck, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { BadgeCheck, PackageCheck, ShieldCheck, Sparkles } from "lucide-react";
 
 const highlights = [
   { icon: Sparkles, label: "New styles added regularly" },
@@ -11,10 +8,8 @@ const highlights = [
 ];
 
 export function MarketTicker() {
-  const [paused, setPaused] = useState(false);
-
   return (
-    <section className={`market-ticker ${paused ? "market-ticker-paused" : ""}`} aria-label="Store highlights">
+    <section className="market-ticker" aria-label="Store highlights" tabIndex={0}>
       <div className="market-ticker-track">
         {[...highlights, ...highlights].map((item, index) => (
           <span aria-hidden={index >= highlights.length ? "true" : undefined} key={`${item.label}-${index}`}>
@@ -22,15 +17,6 @@ export function MarketTicker() {
           </span>
         ))}
       </div>
-      <button
-        aria-pressed={paused}
-        className="market-ticker-pause"
-        type="button"
-        onClick={() => setPaused((current) => !current)}
-      >
-        {paused ? <Play size={15} /> : <Pause size={15} />}
-        <span>{paused ? "Play ticker" : "Pause ticker"}</span>
-      </button>
     </section>
   );
 }
