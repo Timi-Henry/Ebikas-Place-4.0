@@ -16,7 +16,7 @@ import {
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BrandMark } from "@/components/brand-mark";
 import { useOverlayDialog } from "@/components/use-overlay-dialog";
@@ -35,6 +35,31 @@ const utilityLinks = [
   { label: "About", href: "/#about" }
 ];
 
+function AccountUserButton({
+  onOpenWishlist,
+  onOpenOrders
+}: {
+  onOpenWishlist: () => void;
+  onOpenOrders: () => void;
+}) {
+  return (
+    <UserButton>
+      <UserButton.MenuItems>
+        <UserButton.Action
+          label="Wishlist"
+          labelIcon={<Heart size={15} />}
+          onClick={onOpenWishlist}
+        />
+        <UserButton.Action
+          label="Orders"
+          labelIcon={<PackageCheck size={15} />}
+          onClick={onOpenOrders}
+        />
+      </UserButton.MenuItems>
+    </UserButton>
+  );
+}
+
 export function Nav() {
   const [cartOpen, setCartOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
@@ -44,6 +69,8 @@ export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [verifiedAdminUserId, setVerifiedAdminUserId] = useState<string | null>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
+  const mobileSearchTriggerRef = useRef<HTMLButtonElement>(null);
   const mobileDialogRef = useOverlayDialog<HTMLDivElement>(mobileOpen, () => setMobileOpen(false));
   const { count, wishlistCount } = useCart();
   const { isSignedIn, isLoaded, user } = useUser();
@@ -72,11 +99,23 @@ export function Nav() {
 
   function submitSearch() {
     const query = searchQuery.trim();
+    setMobileSearchOpen(false);
     if (isAdmin && /^[a-f\d]{24}$/i.test(query)) {
       window.location.href = "/products/" + query;
       return;
     }
     window.location.href = query ? "/shop?search=" + encodeURIComponent(query) : "/shop";
+  }
+
+  function openMobileSearch() {
+    setMobileOpen(false);
+    setMobileSearchOpen(true);
+    window.requestAnimationFrame(() => mobileSearchInputRef.current?.focus());
+  }
+
+  function closeMobileSearch() {
+    setMobileSearchOpen(false);
+    window.requestAnimationFrame(() => mobileSearchTriggerRef.current?.focus());
   }
 
   return (
@@ -93,7 +132,7 @@ export function Nav() {
           </div>
         </div>
 
-        <nav className="nav" aria-label="Main navigation">
+        <nav className={`nav${mobileSearchOpen ? " nav-search-active" : ""}`} aria-label="Main navigation">
           <div className="nav-inner">
             <Link className="brand" href="/" aria-label="Ebika's Place home">
               <BrandMark priority />
@@ -115,15 +154,19 @@ export function Nav() {
               <span className="search-department">All products</span>
               <input
                 id="site-search"
+                ref={mobileSearchInputRef}
                 type="search"
                 placeholder={isAdmin ? "Search products or paste a product ID" : "Search clothes, shoes, bags and more"}
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") closeMobileSearch();
+                }}
               />
               <button type="submit" aria-label="Search">
                 <Search size={20} />
               </button>
-              <button className="mobile-search-close" type="button" onClick={() => setMobileSearchOpen(false)} aria-label="Close search">
+              <button className="mobile-search-close" type="button" onClick={closeMobileSearch} aria-label="Close search">
                 <X size={19} />
               </button>
             </form>
@@ -131,9 +174,11 @@ export function Nav() {
             <div className="nav-actions">
               <button
                 className="nav-action nav-mobile-search-trigger"
+                ref={mobileSearchTriggerRef}
                 type="button"
-                onClick={() => setMobileSearchOpen(true)}
+                onClick={openMobileSearch}
                 aria-label="Open search"
+                aria-expanded={mobileSearchOpen}
               >
                 <span className="nav-action-icon"><Search size={20} /></span>
                 <small>Search</small>
@@ -144,7 +189,7 @@ export function Nav() {
                   <Heart size={20} />
                   {wishlistCount > 0 ? <b>{wishlistCount}</b> : null}
                 </span>
-                <small>Saved</small>
+                <small>Wishlist</small>
               </button>
               <button className="nav-action orders-nav-action" type="button" onClick={() => setOrdersOpen(true)} aria-label="Open orders">
                 <span className="nav-action-icon"><PackageCheck size={20} /></span>
@@ -167,7 +212,10 @@ export function Nav() {
               ) : null}
               {isLoaded && isSignedIn ? (
                 <div className="nav-user-wrap" aria-label="Account menu">
-                  <UserButton />
+                  <AccountUserButton
+                    onOpenWishlist={() => setWishlistOpen(true)}
+                    onOpenOrders={() => setOrdersOpen(true)}
+                  />
                   <small>Account</small>
                 </div>
               ) : null}
@@ -219,7 +267,16 @@ export function Nav() {
                   ) : null}
                   {isLoaded && isSignedIn ? (
                     <div className="mobile-nav-account-summary">
-                      <UserButton />
+                      <AccountUserButton
+                        onOpenWishlist={() => {
+                          setMobileOpen(false);
+                          setWishlistOpen(true);
+                        }}
+                        onOpenOrders={() => {
+                          setMobileOpen(false);
+                          setOrdersOpen(true);
+                        }}
+                      />
                       <span><strong>Account</strong><small>Manage your profile</small></span>
                     </div>
                   ) : null}
@@ -240,22 +297,26 @@ export function Nav() {
                     <Link href={link.href} key={"mobile-" + link.href} onClick={() => setMobileOpen(false)}>{link.label}</Link>
                   ))}
                   <button
+                    className="mobile-nav-utility-button"
                     type="button"
                     onClick={() => {
                       setMobileOpen(false);
                       setWishlistOpen(true);
                     }}
                   >
-                    Saved items
+                    <Heart size={17} />
+                    <span>Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ""}</span>
                   </button>
                   <button
+                    className="mobile-nav-utility-button"
                     type="button"
                     onClick={() => {
                       setMobileOpen(false);
                       setOrdersOpen(true);
                     }}
                   >
-                    Track your orders
+                    <PackageCheck size={17} />
+                    <span>Orders</span>
                   </button>
                   {isAdmin ? <Link href="/admin" onClick={() => setMobileOpen(false)}>Admin dashboard</Link> : null}
                   {isSignedIn ? <Link href="/addresses" onClick={() => setMobileOpen(false)}>Saved addresses</Link> : null}

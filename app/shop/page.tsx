@@ -27,6 +27,19 @@ export default async function ShopPage({
 }) {
   const [catalog, params] = await Promise.all([getProductsResult(), searchParams]);
   const products = catalog.ok ? catalog.value : [];
+  const browserStateKey = [
+    params.department,
+    params.family,
+    params.type,
+    params.audience,
+    params.category,
+    params.subcategory,
+    params.search,
+    params.filter,
+    params.price,
+    params.size,
+    params.sort
+  ].map((value) => value || "").join("|");
 
   return (
     <main className="shell storefront-shell" id="main-content" tabIndex={-1}>
@@ -66,6 +79,7 @@ export default async function ShopPage({
         <div className="shop-page">
           {catalog.ok ? (
             <ProductBrowser
+              key={browserStateKey}
               products={products}
               title="Shop all products"
               eyebrow="Customer catalog"
