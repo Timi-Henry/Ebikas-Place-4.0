@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, Headphones, ShieldCheck, Truck } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { CatalogUnavailableNotice } from "@/components/catalog-unavailable-notice";
 import { Footer } from "@/components/footer";
 import { Nav } from "@/components/nav";
@@ -130,11 +130,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             <ProductImageGallery product={product} />
             <ProductPurchasePanel product={product} />
           </section>
-          <div className="product-service-row" aria-label="Purchase support">
-            <span><Truck size={19} /><b>Delivery &amp; pickup</b><small>Choose your option at checkout</small></span>
-            <span><ShieldCheck size={19} /><b>Secure ordering</b><small>Your account keeps details protected</small></span>
-            <span><Headphones size={19} /><b>Need help?</b><small>Call or WhatsApp {businessInfo.phone}</small></span>
-          </div>
         </section>
         <ProductRail
           products={relatedProducts.map((relatedProduct) => createProductCardModel(relatedProduct))}

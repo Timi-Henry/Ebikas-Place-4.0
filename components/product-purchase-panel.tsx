@@ -36,38 +36,9 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
 
   return (
     <>
-      <section className="product-info-panel reveal" aria-labelledby="product-title">
-        <span className="product-detail-kicker">
-          {formatTaxonomyLabel(product.category)} / {formatTaxonomyLabel(product.subcategory)}
-        </span>
-        <h1 id="product-title">{product.name}</h1>
-        <ProductRating
-          productId={product.id}
-          initialAverage={product.ratingAverage || 0}
-          initialCount={product.reviewCount || 0}
-        />
-        <div className="product-about-copy">
-          <h2>About this piece</h2>
-          <p>{product.description}</p>
-        </div>
-        <dl className="product-quick-facts">
-          <div>
-            <dt>Department</dt>
-            <dd>{formatTaxonomyLabel(product.category)}</dd>
-          </div>
-          <div>
-            <dt>Style</dt>
-            <dd>{formatTaxonomyLabel(product.subcategory)}</dd>
-          </div>
-          <div>
-            <dt>Fulfillment</dt>
-            <dd>Delivery or rider pickup</dd>
-          </div>
-        </dl>
-      </section>
-
       <aside className="product-buy-panel glass-card reveal" aria-label="Purchase options">
         <span className="product-price-kicker">{discount ? "Sale price" : "Current price"}</span>
+        <strong className="product-buy-name">{product.name}</strong>
         <div className="product-detail-price">
           <strong>{formatPrice(currentPrice)}</strong>
           {compareAt ? <span>{formatPrice(compareAt)}</span> : null}
@@ -152,6 +123,41 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
             <span>{isWishlisted(product.id) ? "Saved" : "Save"}</span>
           </button>
         </div>
+      </aside>
+
+      <section className="product-info-panel reveal" aria-labelledby="product-title">
+        <header className="product-info-heading">
+          <span className="product-detail-kicker">
+            {formatTaxonomyLabel(product.category)} / {formatTaxonomyLabel(product.subcategory)}
+          </span>
+          <h1 id="product-title">{product.name}</h1>
+          <ProductRating
+            productId={product.id}
+            initialAverage={product.ratingAverage || 0}
+            initialCount={product.reviewCount || 0}
+          />
+        </header>
+
+        <div className="product-info-content">
+          <div className="product-about-copy">
+            <h2>About this piece</h2>
+            <p>{product.description}</p>
+          </div>
+          <dl className="product-quick-facts">
+            <div>
+              <dt>Department</dt>
+              <dd>{formatTaxonomyLabel(product.category)}</dd>
+            </div>
+            <div>
+              <dt>Style</dt>
+              <dd>{formatTaxonomyLabel(product.subcategory)}</dd>
+            </div>
+            <div>
+              <dt>Fulfillment</dt>
+              <dd>Delivery or rider pickup</dd>
+            </div>
+          </dl>
+        </div>
 
         <div className="product-buy-assurance">
           <span>
@@ -183,7 +189,7 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
             </p>
           </details>
         </div>
-      </aside>
+      </section>
     </>
   );
 }
