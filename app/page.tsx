@@ -14,6 +14,7 @@ import { Footer } from "@/components/footer";
 import { MarketTicker } from "@/components/market-ticker";
 import { MemberCta } from "@/components/member-cta";
 import { Nav } from "@/components/nav";
+import { PageVisitCounter } from "@/components/page-visit-counter";
 import { createProductCardModel } from "@/components/product-card";
 import { ProductRail } from "@/components/product-rail";
 import { StoreEffects } from "@/components/store-effects";
@@ -23,7 +24,7 @@ import { formatPrice, getCurrentPrice, getDiscountPercent } from "@/lib/pricing"
 import { getProductsResult } from "@/lib/server/products";
 
 const categoryStories = [
-  { value: "women", familyId: "clothing", audienceId: "women", href: "/shop?family=clothing&audience=women", shortLabel: "Women", copy: "Everyday polish and occasion-ready pieces.", tone: "peach" },
+  { value: "women", familyId: "clothing", audienceId: "women", href: "/shop?family=clothing&audience=women", shortLabel: "Women", copy: "Everyday polish and occasion-ready products.", tone: "peach" },
   { value: "men", familyId: "clothing", audienceId: "men", href: "/shop?family=clothing&audience=men", shortLabel: "Men", copy: "Sharp essentials built for work and weekends.", tone: "blue" },
   { value: "kids", familyId: "clothing", audienceId: "kids", href: "/shop?family=clothing&audience=kids", shortLabel: "Kids", copy: "Comfortable looks made for busy little people.", tone: "yellow" },
   { value: "footwear", familyId: "footwear", href: "/shop?family=footwear", shortLabel: "Shoes", copy: "The pairs that pull every outfit together.", tone: "lilac" },
@@ -217,7 +218,7 @@ export default async function HomePage() {
             products={cardsFor(discountedProducts)}
             title="Price drops worth seeing"
             eyebrow="The deal drop"
-            description="A rotating edit of in-stock pieces with real markdowns, refreshed as the catalog changes."
+            description="A rotating edit of in-stock products with real markdowns, refreshed as the catalog changes."
             autoScroll
             carouselLabel="discounted products"
             sectionId="sale"
@@ -300,6 +301,7 @@ export default async function HomePage() {
         </section>
 
         <MemberCta />
+        <PageVisitCounter />
         <Footer />
     </main>
   );

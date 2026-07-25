@@ -256,75 +256,141 @@ export function Nav() {
                   <span className="mobile-nav-brand"><BrandMark /><strong>Menu</strong></span>
                   <button type="button" onClick={() => setMobileOpen(false)} aria-label="Close menu" data-dialog-close><X size={20} /></button>
                 </div>
-                <div className="mobile-nav-account-tools" aria-label="Account and appearance">
-                  {isLoaded && !isSignedIn ? (
-                    <SignInButton mode="modal">
-                      <button type="button" onClick={() => setMobileOpen(false)}>
-                        <UserRound size={18} />
-                        <span><strong>Sign in</strong><small>Access orders and saved details</small></span>
-                      </button>
-                    </SignInButton>
-                  ) : null}
-                  {isLoaded && isSignedIn ? (
-                    <div className="mobile-nav-account-summary">
-                      <AccountUserButton
-                        onOpenWishlist={() => {
-                          setMobileOpen(false);
-                          setWishlistOpen(true);
-                        }}
-                        onOpenOrders={() => {
-                          setMobileOpen(false);
-                          setOrdersOpen(true);
-                        }}
-                      />
-                      <span><strong>Account</strong><small>Manage your profile</small></span>
+                <div className="mobile-nav-scroll">
+                  <section className="mobile-nav-section mobile-nav-account-section" aria-labelledby="mobile-account-heading">
+                    <div className="mobile-nav-section-heading">
+                      <span>01</span>
+                      <div>
+                        <strong id="mobile-account-heading">Your account</strong>
+                        <small>Orders, saved products and preferences</small>
+                      </div>
                     </div>
-                  ) : null}
-                  <div className="mobile-nav-theme-row">
-                    <ThemeToggle className="mobile-nav-theme-toggle" />
-                    <span><strong>Change theme</strong><small>Switch light or dark mode</small></span>
-                  </div>
+                    <div className="mobile-nav-account-tools">
+                      {isLoaded && !isSignedIn ? (
+                        <SignInButton mode="modal">
+                          <button className="mobile-nav-account-primary" type="button" onClick={() => setMobileOpen(false)}>
+                            <UserRound size={19} />
+                            <span><strong>Sign in</strong><small>Access orders and saved details</small></span>
+                          </button>
+                        </SignInButton>
+                      ) : null}
+                      {isLoaded && isSignedIn ? (
+                        <div className="mobile-nav-account-summary">
+                          <AccountUserButton
+                            onOpenWishlist={() => {
+                              setMobileOpen(false);
+                              setWishlistOpen(true);
+                            }}
+                            onOpenOrders={() => {
+                              setMobileOpen(false);
+                              setOrdersOpen(true);
+                            }}
+                          />
+                          <span><strong>Account</strong><small>Manage your profile and security</small></span>
+                        </div>
+                      ) : null}
+                      <div className="mobile-nav-account-shortcuts">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMobileOpen(false);
+                            setWishlistOpen(true);
+                          }}
+                        >
+                          <Heart size={17} />
+                          <span>Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ""}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMobileOpen(false);
+                            setOrdersOpen(true);
+                          }}
+                        >
+                          <PackageCheck size={17} />
+                          <span>Orders</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMobileOpen(false);
+                            setCartOpen(true);
+                          }}
+                        >
+                          <ShoppingBag size={17} />
+                          <span>Cart{count > 0 ? ` (${count})` : ""}</span>
+                        </button>
+                      </div>
+                      {isSignedIn ? (
+                        <Link className="mobile-nav-address-link" href="/addresses" onClick={() => setMobileOpen(false)}>
+                          <MapPin size={17} />
+                          <span>Saved addresses</span>
+                        </Link>
+                      ) : null}
+                      <div className="mobile-nav-theme-row">
+                        <ThemeToggle className="mobile-nav-theme-toggle" />
+                        <span><strong>Appearance</strong><small>Switch light or dark mode</small></span>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="mobile-nav-section mobile-nav-shop-section" aria-labelledby="mobile-shop-heading">
+                    <div className="mobile-nav-section-heading">
+                      <span>02</span>
+                      <div>
+                        <strong id="mobile-shop-heading">Shop departments</strong>
+                        <small>Browse the collection by department</small>
+                      </div>
+                    </div>
+                    <div className="mobile-nav-categories">
+                      <Link className="mobile-nav-all-products" href="/shop" onClick={() => setMobileOpen(false)}>
+                        <Grid2X2 size={17} />
+                        <span>All products</span>
+                      </Link>
+                      <div>
+                        {primaryCategoryLinks.map((link) => (
+                          <Link href={link.href} key={"mobile-" + link.value} onClick={() => setMobileOpen(false)}>{link.label}</Link>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="mobile-nav-section mobile-nav-discover-section" aria-labelledby="mobile-discover-heading">
+                    <div className="mobile-nav-section-heading">
+                      <span>03</span>
+                      <div>
+                        <strong id="mobile-discover-heading">Discover</strong>
+                        <small>Useful shortcuts and curated edits</small>
+                      </div>
+                    </div>
+                    <nav className="mobile-nav-utilities" aria-label="Mobile shortcuts">
+                      {utilityLinks.map((link) => (
+                        <Link
+                          href={link.href}
+                          key={"mobile-" + link.href}
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          {link.label}
+                        </Link>
+                      ))}
+                      {isAdmin ? <Link href="/admin" onClick={() => setMobileOpen(false)}>Admin dashboard</Link> : null}
+                    </nav>
+                  </section>
+
+                  <section className="mobile-nav-section mobile-nav-support-section" aria-labelledby="mobile-support-heading">
+                    <div className="mobile-nav-section-heading">
+                      <span>04</span>
+                      <div>
+                        <strong id="mobile-support-heading">Store support</strong>
+                        <small>Get help before sending a rider</small>
+                      </div>
+                    </div>
+                    <a className="mobile-help-card" href={businessInfo.whatsappHref}>
+                      <Phone size={19} />
+                      <span><strong>Need help ordering?</strong><small>Call or WhatsApp {businessInfo.phone}</small></span>
+                    </a>
+                  </section>
                 </div>
-                <div className="mobile-nav-categories">
-                  <span>Departments</span>
-                  <Link href="/shop" onClick={() => setMobileOpen(false)}>All products</Link>
-                  {primaryCategoryLinks.map((link) => (
-                    <Link href={link.href} key={"mobile-" + link.value} onClick={() => setMobileOpen(false)}>{link.label}</Link>
-                  ))}
-                </div>
-                <div className="mobile-nav-utilities">
-                  {utilityLinks.map((link) => (
-                    <Link href={link.href} key={"mobile-" + link.href} onClick={() => setMobileOpen(false)}>{link.label}</Link>
-                  ))}
-                  <button
-                    className="mobile-nav-utility-button"
-                    type="button"
-                    onClick={() => {
-                      setMobileOpen(false);
-                      setWishlistOpen(true);
-                    }}
-                  >
-                    <Heart size={17} />
-                    <span>Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ""}</span>
-                  </button>
-                  <button
-                    className="mobile-nav-utility-button"
-                    type="button"
-                    onClick={() => {
-                      setMobileOpen(false);
-                      setOrdersOpen(true);
-                    }}
-                  >
-                    <PackageCheck size={17} />
-                    <span>Orders</span>
-                  </button>
-                  {isAdmin ? <Link href="/admin" onClick={() => setMobileOpen(false)}>Admin dashboard</Link> : null}
-                  {isSignedIn ? <Link href="/addresses" onClick={() => setMobileOpen(false)}>Saved addresses</Link> : null}
-                </div>
-                <a className="mobile-help-card" href={businessInfo.whatsappHref}>
-                  <Phone size={19} />
-                  <span><strong>Need help ordering?</strong><small>Call or WhatsApp {businessInfo.phone}</small></span>
-                </a>
               </div>
             </>
           ) : null}

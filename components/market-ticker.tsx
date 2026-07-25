@@ -3,7 +3,7 @@ import { BadgeCheck, PackageCheck, ShieldCheck, Sparkles } from "lucide-react";
 const highlights = [
   { icon: Sparkles, label: "New styles added regularly" },
   { icon: ShieldCheck, label: "Simple account-based shopping" },
-  { icon: BadgeCheck, label: "Save pieces for later" },
+  { icon: BadgeCheck, label: "Save products for later" },
   { icon: PackageCheck, label: "Track orders from your account" }
 ];
 

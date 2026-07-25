@@ -63,7 +63,7 @@ export default async function ShopPage({
             <div>
               <span className="eyebrow">The full collection</span>
               <h1>Find exactly what fits your style.</h1>
-              <p>Search, sort, and filter every piece across clothing, shoes, bags, and accessories.</p>
+              <p>Search, sort, and filter every product across clothing, shoes, bags, and accessories.</p>
             </div>
             <div className="shop-hero-assurance">
               <span><Truck size={18} /> Flexible fulfillment</span>

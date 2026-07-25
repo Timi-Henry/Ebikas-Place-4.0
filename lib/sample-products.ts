@@ -226,7 +226,7 @@ export const sampleProducts: Product[] = [
   withGallery({
     id: "64f000000000000000000007",
     name: "Kids weekend shirt set",
-    description: "A cheerful two-piece kids set with a soft shirt and matching shorts made for play and family outings.",
+    description: "A cheerful matching kids set with a soft shirt and coordinating shorts made for play and family outings.",
     category: "childrens-clothing",
     subcategory: "sets",
     gallery: [...galleries.kidsSet],

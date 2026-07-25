@@ -1,9 +1,45 @@
-.next
-node_modules
+# Dependencies and framework output
+/node_modules/
+/.next/
+/out/
+/dist/
+/.turbo/
+/coverage/
+
+# Local test, QA, and browser artifacts
+/dogfood-output/
+/playwright-report/
+/test-results/
+/blob-report/
+/qa-*.png
+/UsersKurotimi.codexvisualizations*.png
+*.log
+*.tsbuildinfo
+
+# Local tool and editor state
+/.agents/
+/.vercel/
+/.vscode/
+/.idea/
+/.clerk/
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local environment files and secrets
 .env
 .env.*
 !.env.example
-npm-debug.log*
 
-# clerk configuration (can include secrets)
-/.clerk/
+# Package-manager diagnostics
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local backups and obsolete static prototypes
+/*.zip
+/ebikasplace4.00/
+/index.html
+/script.js
+/style.css

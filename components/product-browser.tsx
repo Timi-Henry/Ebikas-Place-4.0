@@ -387,7 +387,7 @@ export function ProductBrowser({
             <span>{productFacetSummary(product)}</span>
             <span className="product-stock-status">
               <span className={product.stock > 0 ? "stock-dot" : "stock-dot stock-dot-out"} />
-              {product.stock > 0 ? "In stock" : "Unavailable"}
+              {product.stock > 0 ? `${product.stock} in stock` : "Unavailable"}
             </span>
           </div>
           <div className={`product-card-rating ${hasReviews ? "" : "product-card-rating-empty"}`}>
@@ -622,7 +622,14 @@ export function ProductBrowser({
               </span>
               <button type="button" onClick={() => setFiltersOpen(false)} aria-label="Close filters" data-dialog-close><X size={18} /></button>
             </div>
-            <div>
+            <div className="catalog-sidebar-scroll">
+              <section className="catalog-sidebar-card catalog-sidebar-browse" aria-labelledby="catalog-browse-title">
+                <header className="catalog-sidebar-card-title">
+                  <span>Browse</span>
+                  <strong id="catalog-browse-title">Product categories</strong>
+                  <small>Choose where you want to shop.</small>
+                </header>
+            <div className="catalog-sidebar-block">
               <strong>Departments</strong>
               <div className="sidebar-filter-list">
                 {availableDepartments.map((item) => (
@@ -642,7 +649,7 @@ export function ProductBrowser({
                 ))}
               </div>
             </div>
-            <div>
+            <div className="catalog-sidebar-block">
               <strong>Categories</strong>
               <div className="sidebar-filter-list">
                 {availableCategories.map((item) => (
@@ -661,7 +668,7 @@ export function ProductBrowser({
                 ))}
               </div>
             </div>
-            <div>
+            <div className="catalog-sidebar-block">
               <strong>Product types</strong>
               <div className="sidebar-filter-list">
                 {availableSubcategories.map((item) => (
@@ -677,7 +684,7 @@ export function ProductBrowser({
                 ))}
               </div>
             </div>
-            <div>
+            <div className="catalog-sidebar-block">
               <strong>Audience</strong>
               <div className="sidebar-filter-list">
                 {availableAudiences.map((item) => (
@@ -693,7 +700,14 @@ export function ProductBrowser({
                 ))}
               </div>
             </div>
-            <div>
+              </section>
+              <section className="catalog-sidebar-card catalog-sidebar-refinements" aria-labelledby="catalog-refine-title">
+                <header className="catalog-sidebar-card-title">
+                  <span>Filter</span>
+                  <strong id="catalog-refine-title">Refine results</strong>
+                  <small>Narrow the selection by availability, price or size.</small>
+                </header>
+            <div className="catalog-sidebar-block">
               <strong>Quick filters</strong>
               <div className="sidebar-filter-grid">
                 {[
@@ -716,7 +730,7 @@ export function ProductBrowser({
                 ))}
               </div>
             </div>
-            <div>
+            <div className="catalog-sidebar-block">
               <strong>Price range</strong>
               <div className="sidebar-filter-list">
                 {([
@@ -737,7 +751,7 @@ export function ProductBrowser({
                 ))}
               </div>
             </div>
-            <div>
+            <div className="catalog-sidebar-block">
               <strong>Available size</strong>
               <div className="sidebar-size-grid">
                 {(["all", "S", "M", "L", "XL", "XXL"] as SizeFilter[]).map((size) => (
@@ -752,6 +766,8 @@ export function ProductBrowser({
                   </button>
                 ))}
               </div>
+            </div>
+              </section>
             </div>
             <button className="catalog-sidebar-apply" type="button" onClick={() => setFiltersOpen(false)}>
               Show {visibleProducts.length} product{visibleProducts.length === 1 ? "" : "s"}

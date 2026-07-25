@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { useState } from "react";
 
 export function ProductRating({
@@ -56,11 +56,7 @@ export function ProductRating({
         <strong>{average ? average.toFixed(1) : "No ratings yet"}</strong>
         <span>{count} review{count === 1 ? "" : "s"}</span>
       </div>
-      <details className="rating-entry">
-        <summary>
-          Rate this item
-          <ChevronDown size={15} />
-        </summary>
+      <div className="rating-entry">
         <div className="rating-actions" role="group" aria-label="Rate this product">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
@@ -75,7 +71,8 @@ export function ProductRating({
             </button>
           ))}
         </div>
-      </details>
+        <span className="rating-entry-label">Rate this item</span>
+      </div>
       {message ? <p role="status" aria-live="polite">{message}</p> : null}
     </div>
   );

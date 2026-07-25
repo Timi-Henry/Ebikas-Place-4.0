@@ -15,7 +15,7 @@ export default function Loading() {
         </div>
         <div className="store-loading-message">
           <strong>Preparing your next look</strong>
-          <small>Loading the page and its latest pieces.</small>
+          <small>Loading the page and its latest products.</small>
         </div>
         <div className="store-loading-progress" aria-hidden="true"><span /></div>
         <div className="store-loading-title" />

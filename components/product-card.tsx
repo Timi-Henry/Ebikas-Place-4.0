@@ -125,7 +125,7 @@ export function ProductCard({ product }: { product: ProductCardModel }) {
           <span>{product.facetSummary}</span>
           <span className="product-stock-status">
             <span className={product.stock > 0 ? "stock-dot" : "stock-dot stock-dot-out"} />
-            {product.stock > 0 ? "In stock" : "Unavailable"}
+            {product.stock > 0 ? `${product.stock} in stock` : "Unavailable"}
           </span>
         </div>
         <div className={`product-card-rating ${hasReviews ? "" : "product-card-rating-empty"}`}>

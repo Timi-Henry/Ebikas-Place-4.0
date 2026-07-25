@@ -39,6 +39,11 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
       <aside className="product-buy-panel glass-card reveal" aria-label="Purchase options">
         <span className="product-price-kicker">{discount ? "Sale price" : "Current price"}</span>
         <strong className="product-buy-name">{product.name}</strong>
+        <ProductRating
+          productId={product.id}
+          initialAverage={product.ratingAverage || 0}
+          initialCount={product.reviewCount || 0}
+        />
         <div className="product-detail-price">
           <strong>{formatPrice(currentPrice)}</strong>
           {compareAt ? <span>{formatPrice(compareAt)}</span> : null}
@@ -131,16 +136,11 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
             {formatTaxonomyLabel(product.category)} / {formatTaxonomyLabel(product.subcategory)}
           </span>
           <h1 id="product-title">{product.name}</h1>
-          <ProductRating
-            productId={product.id}
-            initialAverage={product.ratingAverage || 0}
-            initialCount={product.reviewCount || 0}
-          />
         </header>
 
         <div className="product-info-content">
           <div className="product-about-copy">
-            <h2>About this piece</h2>
+            <h2>About this product</h2>
             <p>{product.description}</p>
           </div>
           <dl className="product-quick-facts">
