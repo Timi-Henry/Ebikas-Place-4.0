@@ -19,6 +19,7 @@ const database = vi.hoisted(() => {
   const products = { updateMany: vi.fn() };
   const mediaAssets = { updateMany: vi.fn() };
   const mediaCleanup = { updateMany: vi.fn() };
+  const backgroundJobs = { updateMany: vi.fn() };
   const collections: Record<string, unknown> = {
     clerk_users: users,
     clerk_user_tombstones: tombstones,
@@ -27,7 +28,8 @@ const database = vi.hoisted(() => {
     reviews,
     products,
     product_media_assets: mediaAssets,
-    product_media_cleanup_outbox: mediaCleanup
+    product_media_cleanup_outbox: mediaCleanup,
+    background_jobs: backgroundJobs
   };
   const db = { collection: vi.fn((name: string) => collections[name]) };
   const session = {
@@ -45,6 +47,7 @@ const database = vi.hoisted(() => {
     products,
     mediaAssets,
     mediaCleanup,
+    backgroundJobs,
     db,
     session,
     client
@@ -62,7 +65,8 @@ vi.mock("@/lib/server/mongodb", () => ({
 import { deletedUserPseudonym } from "@/lib/clerk-user-lifecycle";
 import {
   cleanupDeletedClerkUser,
-  syncClerkUserProfile
+  syncClerkUserProfile,
+  touchActiveClerkUserGuardForWelcomeInTransaction
 } from "@/lib/server/clerk-users";
 
 const snapshot = {
@@ -92,9 +96,36 @@ beforeEach(() => {
   database.products.updateMany.mockResolvedValue({ modifiedCount: 5 });
   database.mediaAssets.updateMany.mockResolvedValue({ modifiedCount: 6 });
   database.mediaCleanup.updateMany.mockResolvedValue({ modifiedCount: 7 });
+  database.backgroundJobs.updateMany.mockResolvedValue({ modifiedCount: 1 });
 });
 
 describe("Clerk user synchronization", () => {
+  it("writes the active pseudonymous guard in the welcome-job transaction", async () => {
+    database.tombstones.updateOne.mockResolvedValue({ matchedCount: 1 });
+
+    await expect(touchActiveClerkUserGuardForWelcomeInTransaction(
+      database.db as never,
+      database.session as never,
+      snapshot.userId
+    )).resolves.toBe(true);
+
+    expect(database.tombstones.updateOne).toHaveBeenCalledWith(
+      { _id: deletedUserPseudonym(snapshot.userId), status: "active" },
+      { $inc: { welcomeEnqueueRevision: 1 } },
+      { session: database.session }
+    );
+  });
+
+  it("does not authorize a welcome job after the lifecycle guard is deleted", async () => {
+    database.tombstones.updateOne.mockResolvedValue({ matchedCount: 0 });
+
+    await expect(touchActiveClerkUserGuardForWelcomeInTransaction(
+      database.db as never,
+      database.session as never,
+      snapshot.userId
+    )).resolves.toBe(false);
+  });
+
   it("does not resurrect a user after account-deletion cleanup", async () => {
     database.tombstones.findOne.mockResolvedValue({
       _id: deletedUserPseudonym(snapshot.userId),
@@ -113,7 +144,10 @@ describe("Clerk user synchronization", () => {
       sourceUpdatedAt: new Date("2026-07-19T00:00:00.000Z")
     });
 
-    await expect(syncClerkUserProfile(snapshot, "updated")).resolves.toEqual({ outcome: "stale" });
+    await expect(syncClerkUserProfile(snapshot, "updated")).resolves.toEqual({
+      outcome: "stale",
+      enqueueWelcome: false
+    });
     expect(database.users.updateOne).not.toHaveBeenCalled();
   });
 
@@ -123,9 +157,45 @@ describe("Clerk user synchronization", () => {
       status: "active"
     });
 
-    await expect(syncClerkUserProfile(snapshot, "updated")).resolves.toEqual({ outcome: "synced" });
+    await expect(syncClerkUserProfile(snapshot, "updated")).resolves.toEqual({
+      outcome: "synced",
+      enqueueWelcome: false
+    });
     expect(database.users.updateOne).toHaveBeenCalledTimes(1);
     expect(database.tombstones.insertOne).not.toHaveBeenCalled();
+  });
+
+  it("reopens a suppressed welcome when a later update adds the primary email", async () => {
+    database.users.findOne.mockResolvedValue({
+      _id: snapshot.userId,
+      primaryEmail: null,
+      sourceUpdatedAt: new Date("2026-07-17T10:00:00.000Z"),
+      welcomeNotification: { status: "suppressed", createdAt: new Date() }
+    });
+
+    await expect(syncClerkUserProfile(snapshot, "updated")).resolves.toEqual({
+      outcome: "synced",
+      enqueueWelcome: true
+    });
+    expect(database.users.updateOne).toHaveBeenCalledWith(
+      { _id: snapshot.userId, "welcomeNotification.status": "suppressed" },
+      { $set: { welcomeNotification: expect.objectContaining({ status: "pending" }) } },
+      expect.objectContaining({ session: database.session })
+    );
+  });
+
+  it("requests another enqueue when an update replays a still-pending welcome", async () => {
+    database.users.findOne.mockResolvedValue({
+      _id: snapshot.userId,
+      primaryEmail: snapshot.primaryEmail,
+      sourceUpdatedAt: new Date("2026-07-19T00:00:00.000Z"),
+      welcomeNotification: { status: "pending", createdAt: new Date() }
+    });
+
+    await expect(syncClerkUserProfile(snapshot, "updated")).resolves.toEqual({
+      outcome: "stale",
+      enqueueWelcome: true
+    });
   });
 });
 
@@ -141,7 +211,8 @@ describe("deleted Clerk user cleanup", () => {
       reviewsUnlinked: 4,
       legacyReviewsUnlinked: 5,
       mediaAssetsUnlinked: 6,
-      mediaCleanupJobsUnlinked: 7
+      mediaCleanupJobsUnlinked: 7,
+      welcomeJobsCancelled: 1
     });
 
     expect(database.users.deleteOne).toHaveBeenCalledWith(
@@ -182,6 +253,30 @@ describe("deleted Clerk user cleanup", () => {
       { actorId: snapshot.userId },
       { $set: { actorId: pseudonym, updatedAt: expect.any(Date) } },
       expect.objectContaining({ session: database.session })
+    );
+    expect(database.backgroundJobs.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "welcome-notification", entityId: snapshot.userId }),
+      expect.objectContaining({
+        $set: expect.objectContaining({
+          entityId: pseudonym,
+          status: "dead",
+          lastErrorCode: "account_deleted"
+        })
+      }),
+      expect.objectContaining({ session: database.session })
+    );
+    expect(database.backgroundJobs.updateMany).toHaveBeenNthCalledWith(
+      2,
+      { kind: "welcome-notification", entityId: snapshot.userId },
+      {
+        $set: {
+          entityId: pseudonym,
+          lastErrorCode: "account_deleted",
+          purgeAt: expect.any(Date),
+          updatedAt: expect.any(Date)
+        }
+      },
+      { session: database.session }
     );
     expect(database.tombstones.insertOne).toHaveBeenCalledWith(
       expect.objectContaining({ _id: pseudonym, status: "deleted" }),

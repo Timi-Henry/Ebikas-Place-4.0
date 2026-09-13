@@ -20,7 +20,7 @@ describe("checkout notification wiring", () => {
 
   it("preserves a successful checkout when enqueueing fails", async () => {
     const result = { order: { id: "64b000000000000000000001" }, replayed: false };
-    const error = new Error("temporary Inngest failure");
+    const error = new Error("temporary queue failure");
     const onError = vi.fn();
     const wrapped = withOrderNotificationEnqueue(
       vi.fn().mockResolvedValue(result),

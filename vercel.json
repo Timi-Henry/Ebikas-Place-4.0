@@ -1,9 +1,26 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "app/api/queues/background-jobs/route.ts": {
+      "experimentalTriggers": [
+        {
+          "type": "queue/v2beta",
+          "topic": "store-background-jobs-v1",
+          "retryAfterSeconds": 30,
+          "maxDeliveries": 12,
+          "maxConcurrency": 2
+        }
+      ]
+    }
+  },
   "crons": [
     {
       "path": "/api/internal/media-cleanup",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/internal/background-jobs",
+      "schedule": "30 3 * * *"
     }
   ]
 }

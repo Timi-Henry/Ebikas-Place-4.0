@@ -105,6 +105,10 @@ export const catalogTaxonomyMutationSchema = z.object({
   parentId: taxonomyId.optional()
 }).strict();
 
+export const homepageDealLabelMutationSchema = z.object({
+  label: boundedText(2, 50)
+}).strict();
+
 export const cloudinaryCleanupSchema = z.object({
   publicIds: z.array(cloudinaryPublicId).min(1).max(25)
 }).strict().transform(({ publicIds }) => ({ publicIds: [...new Set(publicIds)] }));

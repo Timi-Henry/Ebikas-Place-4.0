@@ -36,14 +36,12 @@ const environmentSchema = z.object({
   CLOUDINARY_UPLOAD_FOLDER: optionalString,
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: optionalString,
   CLERK_SECRET_KEY: optionalString,
+  CLERK_WEBHOOK_SIGNING_SECRET: optionalString,
   CRON_SECRET: optionalString,
   ADMIN_IDENTIFIERS: optionalString,
-  INNGEST_DEV: optionalString,
-  INNGEST_EVENT_KEY: optionalString,
-  INNGEST_SIGNING_KEY: optionalString,
-  BREVO_API_KEY: optionalString,
-  BREVO_SENDER_EMAIL: optionalString,
-  BREVO_SENDER_NAME: optionalString,
+  RESEND_API_KEY: optionalString,
+  RESEND_FROM_EMAIL: optionalString,
+  RESEND_FROM_NAME: optionalString,
   ORDER_ADMIN_EMAIL: optionalString
 });
 
@@ -192,34 +190,22 @@ function validateEmailConfiguration(variable: string, value: string, allowDispla
   return value.trim();
 }
 
-export function getInngestEnvironment() {
+export function getClerkWebhookEnvironment() {
   const environment = getEnvironment();
-  const devValue = environment.INNGEST_DEV?.toLowerCase();
-  let isDev = devValue === "1" || devValue === "true";
-
-  if (devValue && !isDev && devValue !== "0" && devValue !== "false") {
-    try {
-      const candidate = /^https?:\/\//i.test(devValue) ? devValue : `http://${devValue}`;
-      new URL(candidate);
-      isDev = true;
-    } catch {
-      throw new EnvironmentConfigurationError(
-        "INNGEST_DEV must be a boolean value or a valid development-server URL.",
-        ["INNGEST_DEV"]
-      );
-    }
+  const signingSecret = environment.CLERK_WEBHOOK_SIGNING_SECRET;
+  if (!signingSecret) {
+    throw new EnvironmentConfigurationError(
+      "Required environment variable CLERK_WEBHOOK_SIGNING_SECRET is not configured.",
+      ["CLERK_WEBHOOK_SIGNING_SECRET"]
+    );
   }
-
-  if (environment.NODE_ENV === "production" && isDev) {
-    throw new EnvironmentConfigurationError("INNGEST_DEV must not be enabled in production.", ["INNGEST_DEV"]);
+  if (!signingSecret.startsWith("whsec_") || signingSecret.length < 24) {
+    throw new EnvironmentConfigurationError(
+      "CLERK_WEBHOOK_SIGNING_SECRET must be a valid Clerk webhook signing secret.",
+      ["CLERK_WEBHOOK_SIGNING_SECRET"]
+    );
   }
-  if (isDev) return Object.freeze({ isDev: true as const });
-
-  return Object.freeze({
-    isDev: false as const,
-    eventKey: requireEnvironmentValue(environment, "INNGEST_EVENT_KEY"),
-    signingKey: requireEnvironmentValue(environment, "INNGEST_SIGNING_KEY")
-  });
+  return Object.freeze({ signingSecret });
 }
 
 export function getOrderNotificationEnvironment() {
@@ -233,18 +219,18 @@ export function getOrderNotificationEnvironment() {
 
 export function getTransactionalEmailEnvironment() {
   const environment = getEnvironment();
-  const senderEmail = requireEnvironmentValue(environment, "BREVO_SENDER_EMAIL");
-  const senderName = environment.BREVO_SENDER_NAME?.trim();
-  if (senderName && senderName.length > 70) {
-    throw new EnvironmentConfigurationError("BREVO_SENDER_NAME must contain at most 70 characters.", [
-      "BREVO_SENDER_NAME"
+  const senderEmail = requireEnvironmentValue(environment, "RESEND_FROM_EMAIL");
+  const senderName = environment.RESEND_FROM_NAME?.trim();
+  if (senderName && [...senderName].length > 100) {
+    throw new EnvironmentConfigurationError("RESEND_FROM_NAME must contain at most 100 characters.", [
+      "RESEND_FROM_NAME"
     ]);
   }
 
   return Object.freeze({
-    apiKey: requireEnvironmentValue(environment, "BREVO_API_KEY"),
+    apiKey: requireEnvironmentValue(environment, "RESEND_API_KEY"),
     sender: Object.freeze({
-      email: validateEmailConfiguration("BREVO_SENDER_EMAIL", senderEmail).toLowerCase(),
+      email: validateEmailConfiguration("RESEND_FROM_EMAIL", senderEmail).toLowerCase(),
       ...(senderName ? { name: senderName } : {})
     })
   });

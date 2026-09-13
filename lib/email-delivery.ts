@@ -22,11 +22,13 @@ export class TransactionalEmailProviderError extends Error {
 
   constructor(
     public readonly code: string,
-    public readonly statusCode: number | null
+    public readonly statusCode: number | null,
+    retryable?: boolean
   ) {
     super(`Transactional email provider rejected the request (${code}).`);
     this.name = "TransactionalEmailProviderError";
-    this.retryable = statusCode === null || statusCode === 408 || statusCode === 429 || statusCode >= 500;
+    this.retryable = retryable
+      ?? (statusCode === null || statusCode === 408 || statusCode === 429 || statusCode >= 500);
   }
 }
 

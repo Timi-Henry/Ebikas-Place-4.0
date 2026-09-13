@@ -1,8 +1,8 @@
 import {
   getClerkEnvironment,
+  getClerkWebhookEnvironment,
   getCloudinaryEnvironment,
   getCronSecret,
-  getInngestEnvironment,
   getOrderNotificationEnvironment,
   getSiteUrl,
   getTransactionalEmailEnvironment,
@@ -19,9 +19,9 @@ export async function GET(request: Request) {
   try {
     getSiteUrl();
     getClerkEnvironment();
+    getClerkWebhookEnvironment();
     getCloudinaryEnvironment();
     getCronSecret();
-    getInngestEnvironment();
     getOrderNotificationEnvironment();
     getTransactionalEmailEnvironment();
     const db = await getDb();

@@ -218,9 +218,9 @@ export function createOrderNotificationDispatcher(dependencies: OrderNotificatio
       return { orderId: order.id, emailIds: [], outcome: "suppressed" as const };
     }
 
-    // If Inngest accepted the event but the producer lost its acknowledgement,
-    // repair the state before any email side effect. Recovery then cannot replay
-    // a provider-successful run after the provider's 24-hour dedupe expires.
+    // If the queue accepted the job but the producer lost its acknowledgement,
+    // repair the state before any email side effect. Mongo prevents completed
+    // replays, while Resend deduplicates ambiguous retries within its 24-hour window.
     if (record.status === "pending") {
       await dependencies.markEnqueued(order.id);
     }

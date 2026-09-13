@@ -13,7 +13,8 @@ export function withOrderNotificationEnqueue<
       await enqueue(result.order.id);
     } catch (error) {
       // The order is already committed. Preserve the successful checkout
-      // response and leave the persisted pending state for daily recovery.
+      // response. Its Mongo job was committed in the same transaction and is
+      // therefore safe for scheduled recovery if queue publication failed.
       onEnqueueError(error, result.order.id);
     }
 

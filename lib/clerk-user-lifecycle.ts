@@ -4,12 +4,10 @@ import { z } from "zod";
 const maxJavaScriptTimestamp = 8_640_000_000_000_000;
 
 export const clerkUserLifecycleEventNames = [
-  "clerk/user.created",
-  "clerk/user.updated",
-  "clerk/user.deleted"
+  "user.created",
+  "user.updated",
+  "user.deleted"
 ] as const;
-
-export type ClerkUserLifecycleEventName = (typeof clerkUserLifecycleEventNames)[number];
 
 const emailAddressSchema = z.object({
   id: z.string().min(1).max(128),
@@ -57,19 +55,19 @@ export function parseClerkUserLifecycleEvent(
   eventName: string,
   data: unknown
 ): ParsedClerkUserLifecycleEvent {
-  if (eventName === "clerk/user.deleted") {
+  if (eventName === "user.deleted") {
     const deleted = deletedClerkUserSchema.parse(data);
     return { kind: "deleted", userId: deleted.id };
   }
 
-  if (eventName !== "clerk/user.created" && eventName !== "clerk/user.updated") {
+  if (eventName !== "user.created" && eventName !== "user.updated") {
     throw new TypeError("Unsupported Clerk user lifecycle event.");
   }
 
   const user = clerkUserSchema.parse(data);
   const primaryEmail = user.email_addresses.find((email) => email.id === user.primary_email_address_id);
   return {
-    kind: eventName === "clerk/user.created" ? "created" : "updated",
+    kind: eventName === "user.created" ? "created" : "updated",
     user: {
       userId: user.id,
       primaryEmail: primaryEmail?.email_address.toLowerCase() || null,

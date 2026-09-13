@@ -5,7 +5,6 @@ import {
   isDeletedUserPseudonym,
   parseClerkUserLifecycleEvent
 } from "@/lib/clerk-user-lifecycle";
-import { CLERK_USER_LIFECYCLE_FUNCTION_SETTINGS } from "@/lib/inngest/clerk-user-lifecycle-settings";
 
 const createdAt = Date.UTC(2026, 6, 17, 9, 30);
 const updatedAt = Date.UTC(2026, 6, 18, 10, 45);
@@ -27,20 +26,16 @@ const clerkUser = {
 };
 
 describe("Clerk user lifecycle parsing", () => {
-  it("keeps the free-plan workflow to three events, one active run, and bounded retries", () => {
+  it("keeps the lifecycle handler limited to the three required Clerk events", () => {
     expect(clerkUserLifecycleEventNames).toEqual([
-      "clerk/user.created",
-      "clerk/user.updated",
-      "clerk/user.deleted"
+      "user.created",
+      "user.updated",
+      "user.deleted"
     ]);
-    expect(CLERK_USER_LIFECYCLE_FUNCTION_SETTINGS).toEqual({
-      concurrency: { limit: 1 },
-      retries: 2
-    });
   });
 
   it("parses the direct user.created webhook data and selects the primary email", () => {
-    expect(parseClerkUserLifecycleEvent("clerk/user.created", clerkUser)).toEqual({
+    expect(parseClerkUserLifecycleEvent("user.created", clerkUser)).toEqual({
       kind: "created",
       user: {
         userId: "user_2abc",
@@ -55,7 +50,7 @@ describe("Clerk user lifecycle parsing", () => {
   });
 
   it("accepts an update with no matching primary email and normalizes blank names", () => {
-    const parsed = parseClerkUserLifecycleEvent("clerk/user.updated", {
+    const parsed = parseClerkUserLifecycleEvent("user.updated", {
       ...clerkUser,
       first_name: "  ",
       last_name: null,
@@ -75,7 +70,7 @@ describe("Clerk user lifecycle parsing", () => {
   });
 
   it("parses Clerk's minimal deleted-user shape", () => {
-    expect(parseClerkUserLifecycleEvent("clerk/user.deleted", {
+    expect(parseClerkUserLifecycleEvent("user.deleted", {
       id: "user_2abc",
       object: "user",
       deleted: true,
@@ -84,7 +79,7 @@ describe("Clerk user lifecycle parsing", () => {
   });
 
   it("rejects a non-deletion payload on the deleted event", () => {
-    expect(() => parseClerkUserLifecycleEvent("clerk/user.deleted", {
+    expect(() => parseClerkUserLifecycleEvent("user.deleted", {
       id: "user_2abc",
       object: "user",
       deleted: false
@@ -92,14 +87,14 @@ describe("Clerk user lifecycle parsing", () => {
   });
 
   it("rejects timestamps outside JavaScript's supported date range", () => {
-    expect(() => parseClerkUserLifecycleEvent("clerk/user.created", {
+    expect(() => parseClerkUserLifecycleEvent("user.created", {
       ...clerkUser,
       updated_at: Number.MAX_SAFE_INTEGER
     })).toThrow();
   });
 
-  it("rejects a wrapped payload because the Inngest transform forwards data directly", () => {
-    expect(() => parseClerkUserLifecycleEvent("clerk/user.created", { user: clerkUser }))
+  it("rejects a wrapped payload because Clerk forwards data directly", () => {
+    expect(() => parseClerkUserLifecycleEvent("user.created", { user: clerkUser }))
       .toThrow();
   });
 

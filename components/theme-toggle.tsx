@@ -2,6 +2,7 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 
 type Theme = "light" | "dark";
 
@@ -18,7 +19,13 @@ function applyTheme(theme: Theme) {
   window.localStorage.setItem("ebikas-theme", theme);
 }
 
-export function ThemeToggle({ className = "icon-button" }: { className?: string }) {
+export function ThemeToggle({
+  className = "icon-button",
+  children
+}: {
+  className?: string;
+  children?: ReactNode;
+}) {
   const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
@@ -43,7 +50,14 @@ export function ThemeToggle({ className = "icon-button" }: { className?: string 
       aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
       title={theme === "dark" ? "Light theme" : "Dark theme"}
     >
-      {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+      {children ? (
+        <span className="theme-toggle-icon" aria-hidden="true">
+          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+        </span>
+      ) : (
+        theme === "dark" ? <Sun size={18} /> : <Moon size={18} />
+      )}
+      {children}
     </button>
   );
 }

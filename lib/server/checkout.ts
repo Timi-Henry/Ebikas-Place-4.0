@@ -11,6 +11,7 @@ import {
 } from "@/lib/checkout";
 import { withOrderNotificationEnqueue } from "@/lib/checkout-notifications";
 import { getCurrentPrice } from "@/lib/pricing";
+import { insertBackgroundJobInTransaction } from "@/lib/server/background-job-store";
 import { revalidateCatalogProducts } from "@/lib/server/catalog-cache";
 import {
   ensureAddressIndexes,
@@ -136,6 +137,11 @@ class MongoCheckoutTransaction implements CheckoutTransaction {
     };
     const result = await this.db.collection<Omit<OrderDocument, "_id">>("orders").insertOne(document, {
       session: this.session
+    });
+    await insertBackgroundJobInTransaction(this.db, this.session, {
+      kind: "order-notification",
+      entityId: result.insertedId.toString(),
+      now: createdAt
     });
     return toOrder({ _id: result.insertedId, ...document });
   }

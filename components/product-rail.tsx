@@ -11,6 +11,7 @@ export function ProductRail({
   autoScroll = false,
   carouselLabel,
   description,
+  statusLabel,
   variant = "default",
   emptyMessage = "No featured products yet.",
   ctaHref,
@@ -26,6 +27,7 @@ export function ProductRail({
   autoScroll?: boolean;
   carouselLabel?: string;
   description?: string;
+  statusLabel?: string;
   variant?: "default" | "sale";
   emptyMessage?: string;
   ctaHref?: string;
@@ -46,7 +48,7 @@ export function ProductRail({
         {variant === "sale" ? (
           <span className="sale-rail-status reveal">
             <i aria-hidden="true" />
-            Fresh offers rotate automatically
+            {statusLabel || "Brand new deals"}
           </span>
         ) : null}
       </div>

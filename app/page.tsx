@@ -22,6 +22,7 @@ import { businessInfo } from "@/lib/business-info";
 import { formatTaxonomyLabel, matchesProductFacets } from "@/lib/product-taxonomy";
 import { formatPrice, getCurrentPrice, getDiscountPercent } from "@/lib/pricing";
 import { getProductsResult } from "@/lib/server/products";
+import { getHomepageDealLabel } from "@/lib/server/storefront-settings";
 
 const categoryStories = [
   { value: "women", familyId: "clothing", audienceId: "women", href: "/shop?family=clothing&audience=women", shortLabel: "Women", copy: "Everyday polish and occasion-ready products.", tone: "peach" },
@@ -33,7 +34,10 @@ const categoryStories = [
 ] as const;
 
 export default async function HomePage() {
-  const catalog = await getProductsResult();
+  const [catalog, homepageDealLabel] = await Promise.all([
+    getProductsResult(),
+    getHomepageDealLabel()
+  ]);
   const products = catalog.ok ? catalog.value : [];
   const featuredProducts = products.filter((product) => product.featured);
   const heroProducts = (featuredProducts.length ? featuredProducts : products).slice(0, 5);
@@ -167,7 +171,7 @@ export default async function HomePage() {
             <div>
               <span className="eyebrow reveal">Find your department</span>
               <h2 className="reveal">Shop by category</h2>
-              <p className="reveal">Start with who you are shopping for, then narrow it down in seconds.</p>
+              <p className="reveal">Shop fashion for women, men and children by category.</p>
             </div>
             <Link className="inline-link reveal" href="/shop">
               View everything <ArrowRight size={17} />
@@ -204,8 +208,8 @@ export default async function HomePage() {
         {catalog.ok ? (
           <ProductRail
             products={cardsFor(featuredProducts.length ? featuredProducts : products.slice(0, 10))}
-            title="This week’s standout styles"
-            eyebrow="Featured edit"
+            title="Featured products"
+            eyebrow="Featured collection"
             autoScroll
             sectionId="featured"
             ctaHref="/shop?filter=featured"
@@ -216,9 +220,10 @@ export default async function HomePage() {
         {catalog.ok && discountedProducts.length > 0 ? (
           <ProductRail
             products={cardsFor(discountedProducts)}
-            title="Price drops worth seeing"
-            eyebrow="The deal drop"
-            description="A rotating edit of in-stock products with real markdowns, refreshed as the catalog changes."
+            title="Featured deals"
+            eyebrow="Special offers"
+            description="Save on selected products while stock lasts."
+            statusLabel={homepageDealLabel}
             autoScroll
             carouselLabel="discounted products"
             sectionId="sale"
@@ -255,7 +260,7 @@ export default async function HomePage() {
           <>
             <ProductRail
               products={cardsFor(newArrivals)}
-              title="Just landed"
+              title="New arrivals"
               eyebrow="New to the store"
               compact
               sectionId="new-arrivals"
@@ -264,7 +269,7 @@ export default async function HomePage() {
             />
             <ProductRail
               products={cardsFor(bestSellers)}
-              title="Popular right now"
+              title="Customer favourites"
               eyebrow="Customer favorites"
               compact
               sectionId="best-sellers"

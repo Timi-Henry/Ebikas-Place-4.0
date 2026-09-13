@@ -1,11 +1,9 @@
 import "server-only";
 import { ObjectId } from "mongodb";
-import { enqueueOrderPlacedNotification } from "@/lib/inngest/order-events";
-import { ensureOrderIndexes } from "@/lib/server/database-indexes";
+import { orderNotificationJobId } from "@/lib/background-jobs";
+import { publishBackgroundJob } from "@/lib/server/background-job-service";
 import { getDb } from "@/lib/server/mongodb";
 import { toOrder, type OrderDocument } from "@/lib/server/orders";
-
-export type PersistedOrderNotificationStatus = "pending" | "enqueued" | "sent" | "suppressed";
 
 export async function loadOrderForNotification(orderId: string) {
   if (!ObjectId.isValid(orderId)) return null;
@@ -78,36 +76,8 @@ export async function enqueuePendingOrderNotification(orderId: string) {
     return { status: currentStatus };
   }
 
-  await enqueueOrderPlacedNotification(orderId);
-  await db.collection<OrderDocument>("orders").updateOne(
-    { _id, "orderNotification.status": "pending" },
-    {
-      $set: {
-        "orderNotification.status": "enqueued",
-        "orderNotification.enqueuedAt": new Date()
-      }
-    }
-  );
-  return { status: "enqueued" as const };
-}
-
-export async function findOrderIdsNeedingNotificationRecovery(limit = 25) {
-  await ensureOrderIndexes();
-  const db = await getDb();
-  const olderThan = new Date(Date.now() - 30 * 60 * 1000);
-  const documents = await db.collection<OrderDocument>("orders")
-    .find({
-      // Only producer-side failures are recovered here. Once Inngest accepts
-      // an event, its own retries/dashboard own that run and prevent a poison
-      // record from consuming this recovery queue forever.
-      "orderNotification.status": "pending",
-      createdAt: { $lte: olderThan }
-    })
-    .project<{ _id: ObjectId }>({ _id: 1 })
-    .sort({ createdAt: 1 })
-    .limit(limit)
-    .toArray();
-  return documents.map((document) => document._id.toString());
+  const publication = await publishBackgroundJob(orderNotificationJobId(orderId));
+  return { status: publication.outcome };
 }
 
 export function logOrderNotificationEnqueueFailure(error: unknown, orderId: string) {

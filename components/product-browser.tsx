@@ -704,7 +704,7 @@ export function ProductBrowser({
               <section className="catalog-sidebar-card catalog-sidebar-refinements" aria-labelledby="catalog-refine-title">
                 <header className="catalog-sidebar-card-title">
                   <span>Filter</span>
-                  <strong id="catalog-refine-title">Refine results</strong>
+                  <strong id="catalog-refine-title">Filter items</strong>
                   <small>Narrow the selection by availability, price or size.</small>
                 </header>
             <div className="catalog-sidebar-block">

@@ -1,5 +1,5 @@
 import "server-only";
-import type { ClientSession } from "mongodb";
+import type { ClientSession, Db } from "mongodb";
 import { deletedUserPseudonym, type ClerkUserSnapshot } from "@/lib/clerk-user-lifecycle";
 import { ensureClerkUserIndexes } from "@/lib/server/database-indexes";
 import { getDb, getMongoClient } from "@/lib/server/mongodb";
@@ -35,6 +35,7 @@ type ClerkUserLifecycleGuard = {
   createdAt?: Date;
   deletedAt?: Date;
   cleanupCompletedAt?: Date;
+  welcomeEnqueueRevision?: number;
 };
 
 export type ClerkUserCleanupResult = {
@@ -46,6 +47,7 @@ export type ClerkUserCleanupResult = {
   legacyReviewsUnlinked: number;
   mediaAssetsUnlinked: number;
   mediaCleanupJobsUnlinked: number;
+  welcomeJobsCancelled: number;
 };
 
 function usersCollection(db: Awaited<ReturnType<typeof getDb>>) {
@@ -58,6 +60,23 @@ function lifecycleGuardsCollection(db: Awaited<ReturnType<typeof getDb>>) {
 
 function welcomeState(now: Date): WelcomeNotificationState {
   return { status: "pending", createdAt: now };
+}
+
+/**
+ * Establishes a write conflict with account deletion before a welcome job is
+ * inserted. A deleted or missing guard never permits a new welcome intent.
+ */
+export async function touchActiveClerkUserGuardForWelcomeInTransaction(
+  db: Db,
+  session: ClientSession,
+  userId: string
+) {
+  const result = await lifecycleGuardsCollection(db).updateOne(
+    { _id: deletedUserPseudonym(userId), status: "active" },
+    { $inc: { welcomeEnqueueRevision: 1 } },
+    { session }
+  );
+  return result.matchedCount === 1;
 }
 
 /**
@@ -91,6 +110,16 @@ export async function syncClerkUserProfile(
         const existing = await users.findOne({ _id: snapshot.userId }, { session });
         const now = new Date();
         let outcome: "synced" | "stale" = "synced";
+        const gainedPrimaryEmail = Boolean(
+          kind === "updated" &&
+          snapshot.primaryEmail &&
+          existing &&
+          !existing.primaryEmail &&
+          existing.welcomeNotification?.status === "suppressed"
+        );
+        const pendingWelcomeReplay = Boolean(
+          kind === "updated" && existing?.welcomeNotification?.status === "pending"
+        );
 
         // Sync and deletion both write this pseudonymous guard. That forces
         // concurrent transactions to serialize instead of allowing a snapshot
@@ -131,9 +160,18 @@ export async function syncClerkUserProfile(
             { $set: { welcomeNotification: welcomeState(now) } },
             { session }
           );
+        } else if (gainedPrimaryEmail) {
+          await users.updateOne(
+            { _id: snapshot.userId, "welcomeNotification.status": "suppressed" },
+            { $set: { welcomeNotification: welcomeState(now) } },
+            { session }
+          );
         }
 
-        return { outcome };
+        return {
+          outcome,
+          enqueueWelcome: kind === "created" || gainedPrimaryEmail || pendingWelcomeReplay
+        };
       },
       {
         readConcern: { level: "snapshot" },
@@ -202,6 +240,48 @@ export async function markWelcomeNotificationSuppressed(userId: string) {
   );
 }
 
+async function cancelWelcomeBackgroundJob(
+  db: Awaited<ReturnType<typeof getDb>>,
+  session: ClientSession,
+  userId: string,
+  pseudonym: string,
+  now: Date
+) {
+  const result = await db.collection("background_jobs").updateMany(
+    {
+      kind: "welcome-notification",
+      entityId: userId,
+      status: { $nin: ["completed", "dead"] }
+    },
+    {
+      $set: {
+        entityId: pseudonym,
+        status: "dead",
+        deadAt: now,
+        purgeAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1_000),
+        lastErrorCode: "account_deleted",
+        nextAttemptAt: now,
+        updatedAt: now
+      },
+      $unset: { leaseId: "", leaseUntil: "" }
+    },
+    { session }
+  );
+  await db.collection("background_jobs").updateMany(
+    { kind: "welcome-notification", entityId: userId },
+    {
+      $set: {
+        entityId: pseudonym,
+        lastErrorCode: "account_deleted",
+        purgeAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1_000),
+        updatedAt: now
+      }
+    },
+    { session }
+  );
+  return result.modifiedCount;
+}
+
 async function unlinkRetainedUserData(
   db: Awaited<ReturnType<typeof getDb>>,
   session: ClientSession,
@@ -264,7 +344,8 @@ export async function cleanupDeletedClerkUser(userId: string): Promise<ClerkUser
     reviewsUnlinked: 0,
     legacyReviewsUnlinked: 0,
     mediaAssetsUnlinked: 0,
-    mediaCleanupJobsUnlinked: 0
+    mediaCleanupJobsUnlinked: 0,
+    welcomeJobsCancelled: 0
   };
   let result = emptyResult;
 
@@ -300,11 +381,19 @@ export async function cleanupDeletedClerkUser(userId: string): Promise<ClerkUser
         const profile = await usersCollection(db).deleteOne({ _id: userId }, { session });
         const addresses = await db.collection("addresses").deleteMany({ userId }, { session });
         const unlinked = await unlinkRetainedUserData(db, session, userId, pseudonym, now);
+        const welcomeJobsCancelled = await cancelWelcomeBackgroundJob(
+          db,
+          session,
+          userId,
+          pseudonym,
+          now
+        );
 
         result = {
           outcome: "cleaned",
           profileDeleted: profile.deletedCount,
           addressesDeleted: addresses.deletedCount,
+          welcomeJobsCancelled,
           ...unlinked
         };
       },

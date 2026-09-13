@@ -51,7 +51,7 @@ describe("welcome notification dispatcher", () => {
     });
     const sendMany = vi.fn(async () => {
       sequence.push("emailed");
-      return { messageIds: ["brevo-welcome"] };
+      return { messageIds: ["resend-welcome"] };
     });
     const dispatch = createWelcomeNotificationDispatcher({
       loadUser: vi.fn().mockResolvedValue(user),
@@ -62,7 +62,7 @@ describe("welcome notification dispatcher", () => {
 
     await expect(dispatch(user.userId)).resolves.toEqual({
       userId: user.userId,
-      emailIds: ["brevo-welcome"],
+      emailIds: ["resend-welcome"],
       outcome: "sent"
     });
     expect(sequence).toEqual(["enqueued", "emailed"]);
@@ -93,7 +93,7 @@ describe("welcome notification dispatcher", () => {
     }
   );
 
-  it("suppresses a missing mirrored user without calling Brevo", async () => {
+  it("suppresses a missing mirrored user without calling Resend", async () => {
     const sendMany = vi.fn();
     const dispatch = createWelcomeNotificationDispatcher({
       loadUser: vi.fn().mockResolvedValue(null),
@@ -110,7 +110,7 @@ describe("welcome notification dispatcher", () => {
     expect(sendMany).not.toHaveBeenCalled();
   });
 
-  it("suppresses a user with no primary email without calling Brevo", async () => {
+  it("suppresses a user with no primary email without calling Resend", async () => {
     const sendMany = vi.fn();
     const markEnqueued = vi.fn();
     const dispatch = createWelcomeNotificationDispatcher({
@@ -125,13 +125,13 @@ describe("welcome notification dispatcher", () => {
     expect(sendMany).not.toHaveBeenCalled();
   });
 
-  it("does not repeat the enqueued state write on an Inngest retry", async () => {
+  it("does not repeat the enqueued state write on a queue retry", async () => {
     const markEnqueued = vi.fn();
     const dispatch = createWelcomeNotificationDispatcher({
       loadUser: vi.fn().mockResolvedValue({ ...user, status: "enqueued" }),
       markEnqueued,
       getConfig: () => config,
-      sendMany: vi.fn().mockResolvedValue({ messageIds: ["brevo-welcome"] })
+      sendMany: vi.fn().mockResolvedValue({ messageIds: ["resend-welcome"] })
     });
 
     await dispatch(user.userId);
@@ -151,7 +151,7 @@ describe("welcome notification dispatcher", () => {
     expect(isPermanentWelcomeNotificationError(providerError)).toBe(false);
   });
 
-  it("recognizes permanent provider rejections for the Inngest workflow", () => {
+  it("recognizes permanent provider rejections for the durable workflow", () => {
     const invalidRecipient = new TransactionalEmailProviderError("invalid_parameter", 400);
 
     expect(isPermanentWelcomeNotificationError(invalidRecipient)).toBe(true);

@@ -13,7 +13,7 @@ import {
   UserRound,
   X
 } from "lucide-react";
-import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import { SignInButton, UserButton, useClerk, useUser } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -35,29 +35,8 @@ const utilityLinks = [
   { label: "About", href: "/#about" }
 ];
 
-function AccountUserButton({
-  onOpenWishlist,
-  onOpenOrders
-}: {
-  onOpenWishlist: () => void;
-  onOpenOrders: () => void;
-}) {
-  return (
-    <UserButton>
-      <UserButton.MenuItems>
-        <UserButton.Action
-          label="Wishlist"
-          labelIcon={<Heart size={15} />}
-          onClick={onOpenWishlist}
-        />
-        <UserButton.Action
-          label="Orders"
-          labelIcon={<PackageCheck size={15} />}
-          onClick={onOpenOrders}
-        />
-      </UserButton.MenuItems>
-    </UserButton>
-  );
+function AccountUserButton() {
+  return <UserButton />;
 }
 
 export function Nav() {
@@ -73,6 +52,7 @@ export function Nav() {
   const mobileSearchTriggerRef = useRef<HTMLButtonElement>(null);
   const mobileDialogRef = useOverlayDialog<HTMLDivElement>(mobileOpen, () => setMobileOpen(false));
   const { count, wishlistCount } = useCart();
+  const { openUserProfile } = useClerk();
   const { isSignedIn, isLoaded, user } = useUser();
   const publicMetadata = user?.publicMetadata as { role?: string; admin?: boolean } | undefined;
   const metadataAdmin = publicMetadata?.role === "admin" || publicMetadata?.admin === true;
@@ -212,10 +192,7 @@ export function Nav() {
               ) : null}
               {isLoaded && isSignedIn ? (
                 <div className="nav-user-wrap" aria-label="Account menu">
-                  <AccountUserButton
-                    onOpenWishlist={() => setWishlistOpen(true)}
-                    onOpenOrders={() => setOrdersOpen(true)}
-                  />
+                  <AccountUserButton />
                   <small>Account</small>
                 </div>
               ) : null}
@@ -275,19 +252,23 @@ export function Nav() {
                         </SignInButton>
                       ) : null}
                       {isLoaded && isSignedIn ? (
-                        <div className="mobile-nav-account-summary">
-                          <AccountUserButton
-                            onOpenWishlist={() => {
-                              setMobileOpen(false);
-                              setWishlistOpen(true);
-                            }}
-                            onOpenOrders={() => {
-                              setMobileOpen(false);
-                              setOrdersOpen(true);
-                            }}
-                          />
-                          <span><strong>Account</strong><small>Manage your profile and security</small></span>
-                        </div>
+                        <button
+                          className="mobile-nav-account-summary"
+                          type="button"
+                          onClick={() => {
+                            setMobileOpen(false);
+                            openUserProfile();
+                          }}
+                        >
+                          <span
+                            className="mobile-nav-account-avatar"
+                            style={user?.imageUrl ? { backgroundImage: `url(${user.imageUrl})` } : undefined}
+                            aria-hidden="true"
+                          >
+                            {!user?.imageUrl ? <UserRound size={18} /> : null}
+                          </span>
+                          <span><strong>Manage account</strong><small>Profile, password and security</small></span>
+                        </button>
                       ) : null}
                       <div className="mobile-nav-account-shortcuts">
                         <button
@@ -327,10 +308,9 @@ export function Nav() {
                           <span>Saved addresses</span>
                         </Link>
                       ) : null}
-                      <div className="mobile-nav-theme-row">
-                        <ThemeToggle className="mobile-nav-theme-toggle" />
+                      <ThemeToggle className="mobile-nav-theme-row">
                         <span><strong>Appearance</strong><small>Switch light or dark mode</small></span>
-                      </div>
+                      </ThemeToggle>
                     </div>
                   </section>
 
@@ -360,7 +340,7 @@ export function Nav() {
                       <span>03</span>
                       <div>
                         <strong id="mobile-discover-heading">Discover</strong>
-                        <small>Useful shortcuts and curated edits</small>
+                        <small>Collections, offers and store information</small>
                       </div>
                     </div>
                     <nav className="mobile-nav-utilities" aria-label="Mobile shortcuts">
