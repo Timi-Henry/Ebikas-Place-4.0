@@ -24,6 +24,9 @@ import { formatPrice, getCurrentPrice, getDiscountPercent } from "@/lib/pricing"
 import { getProductsResult } from "@/lib/server/products";
 import { getHomepageDealLabel } from "@/lib/server/storefront-settings";
 
+// Refresh the database-backed homepage merchandising at most once per minute.
+export const revalidate = 60;
+
 const categoryStories = [
   { value: "women", familyId: "clothing", audienceId: "women", href: "/shop?family=clothing&audience=women", shortLabel: "Women", copy: "Everyday polish and occasion-ready products.", tone: "peach" },
   { value: "men", familyId: "clothing", audienceId: "men", href: "/shop?family=clothing&audience=men", shortLabel: "Men", copy: "Sharp essentials built for work and weekends.", tone: "blue" },

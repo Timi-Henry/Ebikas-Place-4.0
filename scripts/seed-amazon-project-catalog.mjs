@@ -30,7 +30,7 @@ const bagPhotos = [
   "photo-1584917865442-de89df76afd3",
   "photo-1594223274512-ad4803739b7c",
   "photo-1553062407-98eeb64c6a62",
-  "photo-1590874103328-eac8a683ce7c"
+  "photo-1584917865442-de89df76afd3"
 ];
 const accessoryPhotos = [
   "photo-1535632066927-ab7c9ab60908",
@@ -43,7 +43,7 @@ const accessoryPhotos = [
 const cameraPhotos = [
   "photo-1516035069371-29a1b244cc32",
   "photo-1502920917128-1aa500764cbd",
-  "photo-1510127034890-5d46b12f99f4",
+  "photo-1542038784456-1ea8e935640e",
   "photo-1581591524425-c7e0978865fc",
   "photo-1542038784456-1ea8e935640e"
 ];
@@ -96,13 +96,13 @@ const products = [
   ["handbags", "Michael Kors Jet Set Travel Large Crossbody Bag", "A compact structured crossbody with an adjustable strap and organized interior pockets.", 249000, "photo-1548036328-c9fa89d128fa", "women", "One size"],
   ["handbags", "Wrangler Women's Hobo Shoulder Bag", "A roomy shoulder bag with a relaxed shape and space for daily essentials.", 89500, "photo-1594223274512-ad4803739b7c", "women", "One size"],
   ["totes", "L.L.Bean Boat and Tote, Open-Top", "A sturdy canvas carryall with reinforced handles and a roomy open-top interior.", 98500, "photo-1584917865442-de89df76afd3", "unisex", "One size; multiple bag sizes on listing"],
-  ["totes", "BAGGU Duck Bag", "A reusable canvas tote with shoulder straps and a practical shape for daily carry.", 74500, "photo-1590874103328-eac8a683ce7c", "unisex", "One size"],
+  ["totes", "BAGGU Duck Bag", "A reusable canvas tote with shoulder straps and a practical shape for daily carry.", 74500, "photo-1548036328-c9fa89d128fa", "unisex", "One size"],
   ["backpacks", "JanSport SuperBreak One Backpack", "A lightweight daypack with a roomy main compartment and front utility pocket.", 69500, "photo-1553062407-98eeb64c6a62", "unisex", "One size"],
   ["backpacks", "Amazon Basics Laptop Backpack", "A multi-compartment backpack with a padded laptop section for commuting and school.", 62500, "photo-1553062407-98eeb64c6a62", "unisex", "One size"],
   ["clutches", "Dasein Women's Evening Clutch Bag", "A compact evening bag with a polished finish and space for a phone, cards, and small essentials.", 53500, "photo-1594223274512-ad4803739b7c", "women", "One size"],
   ["clutches", "JW PEI Women's Envelope Clutch Bag", "A structured envelope-style clutch with a clean profile for dinners and special occasions.", 99500, "photo-1548036328-c9fa89d128fa", "women", "One size"],
   ["crossbody-bags", "Baggallini Everywhere Bag", "A lightweight crossbody with an adjustable strap and multiple zip compartments for travel.", 119000, "photo-1584917865442-de89df76afd3", "women", "One size"],
-  ["crossbody-bags", "Travelon Anti-Theft Classic Mini Shoulder Bag", "A compact travel crossbody with locking compartments and an adjustable strap.", 109000, "photo-1590874103328-eac8a683ce7c", "unisex", "One size"],
+  ["crossbody-bags", "Travelon Anti-Theft Classic Mini Shoulder Bag", "A compact travel crossbody with locking compartments and an adjustable strap.", 109000, "photo-1584917865442-de89df76afd3", "unisex", "One size"],
   ["jewelry", "PAVOI 14K Gold-Plated Huggie Earrings", "A pair of small gold-tone huggie hoops with a polished finish and hinged closure.", 18500, "photo-1535632066927-ab7c9ab60908", "women", "One size"],
   ["jewelry", "Swarovski Attract Trilogy Ring", "A polished crystal trilogy ring with a delicate profile for everyday or occasion wear.", 119000, "photo-1515562141207-7a88fb7ce338", "women", "Multiple ring sizes on listing"],
   ["watches", "Casio F-91W-1 Classic Digital Watch", "A lightweight digital watch with an alarm, stopwatch, backlight, and resin strap.", 29500, "photo-1523275335684-37898b6baf30", "unisex", "Adjustable strap"],
@@ -115,11 +115,11 @@ const products = [
   ["sunglasses", "SOJOS SJ2067 Retro Polarized Sunglasses", "A retro-inspired frame with polarized lenses for bright-day casual wear.", 29500, "photo-1511499767150-a48a237f0083", "unisex", "One size"],
   ["mirrorless-cameras", "Sony Alpha a6400 Mirrorless Camera", "An interchangeable-lens APS-C camera with an electronic viewfinder and fast hybrid autofocus.", 1899000, "photo-1516035069371-29a1b244cc32", "unisex", "Camera body; lens kit options vary"],
   ["mirrorless-cameras", "Canon EOS R50 Mirrorless Camera", "A compact interchangeable-lens camera with an APS-C sensor and a vari-angle touchscreen.", 2199000, "photo-1502920917128-1aa500764cbd", "unisex", "Camera body; lens kit options vary"],
-  ["dslr-cameras", "Canon EOS Rebel T7 DSLR Camera", "An entry-level DSLR kit with an optical viewfinder and interchangeable lens mount.", 1199000, "photo-1510127034890-5d46b12f99f4", "unisex", "Camera kit options vary"],
+  ["dslr-cameras", "Canon EOS Rebel T7 DSLR Camera", "An entry-level DSLR kit with an optical viewfinder and interchangeable lens mount.", 1199000, "photo-1502920917128-1aa500764cbd", "unisex", "Camera kit options vary"],
   ["dslr-cameras", "Nikon D7500 DSLR Camera", "A DX-format DSLR body with an optical viewfinder, tilting display, and interchangeable lenses.", 2799000, "photo-1581591524425-c7e0978865fc", "unisex", "Camera body; lens kit options vary"],
   ["compact-cameras", "Sony RX100 VII Premium Compact Camera", "A pocketable premium compact camera with a built-in zoom lens and electronic viewfinder.", 2599000, "photo-1516035069371-29a1b244cc32", "unisex", "Fixed lens; no interchangeable lens sizes"],
   ["compact-cameras", "Canon PowerShot G7 X Mark III Digital Camera", "A compact camera with a built-in zoom lens, flip-up screen, and pocket-friendly body.", 1999000, "photo-1502920917128-1aa500764cbd", "unisex", "Fixed lens; no interchangeable lens sizes"],
-  ["camera-lenses", "Canon EF 50mm f/1.8 STM Lens", "A lightweight prime lens with a bright f/1.8 aperture for portraits and low-light photography.", 425000, "photo-1510127034890-5d46b12f99f4", "unisex", "50 mm focal length"],
+  ["camera-lenses", "Canon EF 50mm f/1.8 STM Lens", "A lightweight prime lens with a bright f/1.8 aperture for portraits and low-light photography.", 425000, "photo-1542038784456-1ea8e935640e", "unisex", "50 mm focal length"],
   ["camera-lenses", "Sigma 18-50mm f/2.8 DC DN Contemporary Lens for Sony E", "A compact standard zoom lens with a constant f/2.8 aperture for APS-C mirrorless cameras.", 995000, "photo-1581591524425-c7e0978865fc", "unisex", "18–50 mm focal length"],
   ["camera-accessories", "SanDisk 128GB Extreme PRO SDXC UHS-I Card", "A high-speed SDXC memory card for compatible cameras, with ample capacity for photos and video.", 59500, "photo-1542038784456-1ea8e935640e", "unisex", "128 GB capacity"],
   ["camera-accessories", "Peak Design Slide Camera Strap", "An adjustable camera strap with quick-connection anchors for carrying compatible cameras.", 159000, "photo-1516035069371-29a1b244cc32", "unisex", "Adjustable strap"],
@@ -158,12 +158,19 @@ const familyImages = {
   "cameras-and-photography": cameraPhotos
 };
 const apparelTypes = new Set(["shirts", "t-shirts", "polos", "tops", "blouses", "crop-tops", "dresses", "skirts", "pants", "jeans", "shorts", "sets", "native-wear", "outerwear"]);
+// Curated homepage placements for the project preview. These are merchandising
+// examples, not claims about real sales, current arrivals, or supplier stock.
+const featuredKeys = new Set(["shirts:1", "polos:1", "dresses:1", "pants:1", "sneakers:1", "boots:2", "handbags:1", "jewelry:1", "mirrorless-cameras:1", "womens-shoes:1"]);
+const newArrivalKeys = new Set(["t-shirts:1", "tops:2", "crop-tops:1", "skirts:1", "sets:1", "native-wear:1", "native-wear:2", "outerwear:1", "outerwear:2", "blouses:1"]);
+const bestSellerKeys = new Set(["t-shirts:2", "jeans:1", "jeans:2", "sandals:1", "sandals:2", "backpacks:1", "watches:1", "camera-accessories:1", "camera-accessories:2", "shorts:1"]);
+const dealKeys = new Set(["blouses:2", "shorts:2", "loafers:1", "loafers:2", "totes:1", "totes:2", "camera-lenses:1", "camera-lenses:2", "heels:1", "clutches:1"]);
 const docs = [];
 const countsByType = new Map();
 
 for (const [typeId, name, copy, price, photo, audience, sizing] of products) {
   const count = (countsByType.get(typeId) || 0) + 1;
   countsByType.set(typeId, count);
+  const merchandisingKey = `${typeId}:${count}`;
   const [departmentId, familyId] = familyByType[typeId] || [];
   if (!departmentId || !familyId || count > 2) throw new Error(`Invalid or duplicate taxonomy entry: ${typeId}`);
   const fallbackPhotos = familyImages[familyId];
@@ -191,12 +198,16 @@ for (const [typeId, name, copy, price, photo, audience, sizing] of products) {
     subcategory: typeId,
     taxonomy: { version: 1, departmentId, familyId, productTypeId: typeId, audienceIds: audiences, attributes },
     price,
+    ...(dealKeys.has(merchandisingKey) ? { salePrice: Math.round(price * 0.85) } : {}),
     imageUrl,
     imageUrls: [imageUrl],
     sizes: apparelTypes.has(typeId) ? (typeId === "sets" ? ["S", "M", "L"] : ["S", "M", "L", "XL", "XXL"]) : [],
     stock: 8,
-    featured: false,
-    badges: [],
+    featured: featuredKeys.has(merchandisingKey),
+    badges: [
+      ...(newArrivalKeys.has(merchandisingKey) ? ["new"] : []),
+      ...(bestSellerKeys.has(merchandisingKey) ? ["best-seller"] : [])
+    ],
     ratingAverage: 0,
     reviewCount: 0,
     isProjectDemo: true,
@@ -216,12 +227,24 @@ for (const [typeId, count] of countsByType) {
 if (countsByType.size !== 37 || docs.length !== 74) {
   throw new Error(`Catalog completeness check failed: ${countsByType.size} types, ${docs.length} products`);
 }
+if ([featuredKeys, newArrivalKeys, bestSellerKeys, dealKeys].some((keys) => keys.size !== 10)) {
+  throw new Error("Each homepage section should receive exactly ten curated demo products.");
+}
+const plannedSectionCounts = {
+  featured: docs.filter((doc) => doc.featured).length,
+  newArrivals: docs.filter((doc) => doc.badges.includes("new")).length,
+  bestSellers: docs.filter((doc) => doc.badges.includes("best-seller")).length,
+  discounted: docs.filter((doc) => doc.salePrice !== undefined).length
+};
+if (Object.values(plannedSectionCounts).some((count) => count !== 10)) {
+  throw new Error("Homepage section selectors do not match ten catalog products each.");
+}
 
 const apply = process.argv.includes("--apply");
 const uri = process.env.MONGODB_URI;
 const dbName = process.env.MONGODB_DB || "ebikas_place";
 if (!apply) {
-  console.log(JSON.stringify({ mode: "dry-run", products: docs.length, productTypes: countsByType.size, databaseConfigured: Boolean(uri) }, null, 2));
+  console.log(JSON.stringify({ mode: "dry-run", products: docs.length, productTypes: countsByType.size, homepageSectionCounts: plannedSectionCounts, databaseConfigured: Boolean(uri) }, null, 2));
   process.exit(0);
 }
 if (!uri) throw new Error("MONGODB_URI is required (load it from .env.local).");
@@ -261,6 +284,15 @@ try {
   if (coverage.length !== 37 || coverage.some(({ count }) => count !== 2)) {
     throw new Error("Post-import taxonomy coverage verification failed.");
   }
+  const sectionCounts = {
+    featured: await collection.countDocuments({ isProjectDemo: true, seedKey: { $regex: "^amazon-project-catalog-v1:" }, featured: true }),
+    newArrivals: await collection.countDocuments({ isProjectDemo: true, seedKey: { $regex: "^amazon-project-catalog-v1:" }, badges: "new" }),
+    bestSellers: await collection.countDocuments({ isProjectDemo: true, seedKey: { $regex: "^amazon-project-catalog-v1:" }, badges: "best-seller" }),
+    discounted: await collection.countDocuments({ isProjectDemo: true, seedKey: { $regex: "^amazon-project-catalog-v1:" }, salePrice: { $gt: 0 } })
+  };
+  if (Object.values(sectionCounts).some((count) => count !== 10)) {
+    throw new Error("Post-import homepage section verification failed.");
+  }
   console.log(JSON.stringify({
     mode: "applied",
     database: dbName,
@@ -269,6 +301,7 @@ try {
     existingSeedRecordsRefreshed: writeResult.modifiedCount,
     projectDemoProductsInDatabase: seededCount,
     verifiedProductTypesWithTwoItems: coverage.length,
+    homepageSectionCounts: sectionCounts,
     preexistingNonDemoProductsPreserved: existingCount
   }, null, 2));
 } finally {
