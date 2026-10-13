@@ -33,4 +33,10 @@ describe("canonical site navigation", () => {
       })
     ).toBeNull();
   });
+
+  it("keeps production builds testable on loopback hosts", () => {
+    expect(getCanonicalPageRedirect("http://localhost:3000/shop", "GET", production)).toBeNull();
+    expect(getCanonicalPageRedirect("http://127.0.0.1:3001/products/123", "GET", production)).toBeNull();
+    expect(getCanonicalPageRedirect("http://[::1]:3002/shop", "HEAD", production)).toBeNull();
+  });
 });

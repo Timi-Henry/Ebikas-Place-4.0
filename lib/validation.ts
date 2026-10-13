@@ -8,7 +8,7 @@ const cloudinaryPublicId = z.string().trim().min(1).max(220).refine(
   "Invalid Cloudinary public ID."
 );
 const productMediaStageId = z.string().regex(/^[a-f0-9]{40}$/);
-const allowedImageHosts = new Set(["res.cloudinary.com", "images.unsplash.com", "fakestoreapi.com"]);
+const allowedImageHosts = new Set(["res.cloudinary.com", "images.unsplash.com", "fakestoreapi.com", "m.media-amazon.com"]);
 const productImageUrl = z.string().trim().max(2048).url().refine((value) => {
   try {
     const url = new URL(value);

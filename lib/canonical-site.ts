@@ -25,6 +25,17 @@ export function getCanonicalSiteOrigin(environment: CanonicalSiteEnvironment = p
   );
 }
 
+function isLoopbackHostname(hostname: string) {
+  const normalized = hostname.toLowerCase();
+  return (
+    normalized === "localhost" ||
+    normalized.endsWith(".localhost") ||
+    normalized === "[::1]" ||
+    normalized === "::1" ||
+    normalized.startsWith("127.")
+  );
+}
+
 /**
  * Keeps browser navigation on the canonical production host so authenticated
  * mutations cannot originate from a Vercel preview or immutable deployment URL.
@@ -40,6 +51,7 @@ export function getCanonicalPageRedirect(
 
   const request = new URL(requestUrl);
   if (request.pathname === "/api" || request.pathname.startsWith("/api/")) return null;
+  if (isLoopbackHostname(request.hostname)) return null;
 
   const canonicalOrigin = getCanonicalSiteOrigin(environment);
   if (!canonicalOrigin || request.origin === canonicalOrigin) return null;
